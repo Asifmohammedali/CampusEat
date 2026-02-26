@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recharge Wallet — CampusEats Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0b0b0a;
+      --sidebar:   #111110;
+      --card:      #181816;
+      --border:    #272522;
+      --accent:    #f5a623;
+      --accent2:   #e8431a;
+      --text:      #ede9e0;
+      --muted:     #6b6860;
+      --muted2:    #3a3835;
+      --input-bg:  #0f0f0e;
+      --hover:     #1e1d1b;
+      --success:   #4caf7d;
+      --error:     #ff5c5c;
+      --sidebar-w: 260px;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 1.4rem 1.2rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .brand-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 9px; display: grid; place-items: center; font-size: 1rem; }
+    .brand-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; }
+    .brand-text span { color: var(--accent); }
+    .admin-pill { margin: 1rem 1rem 0.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 0.9rem; display: flex; align-items: center; gap: 10px; }
+    .admin-avatar { width: 34px; height: 34px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 50%; display: grid; place-items: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem; color: #0b0b0a; flex-shrink: 0; }
+    .admin-name { font-weight: 600; font-size: 0.82rem; }
+    .admin-role { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+    .nav-section { padding: 1rem 0.8rem 0.2rem; }
+    .nav-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted2); padding: 0 0.4rem; margin-bottom: 0.35rem; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 0.55rem 0.75rem; border-radius: 9px; color: var(--muted); text-decoration: none; font-size: 0.855rem; transition: background 0.15s, color 0.15s; margin-bottom: 2px; }
+    .nav-item:hover { background: var(--hover); color: var(--text); }
+    .nav-item.active { background: rgba(245,166,35,0.1); color: var(--accent); }
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; opacity: 0.6; }
+    .nav-item:hover .nav-icon, .nav-item.active .nav-icon { opacity: 1; }
+    .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid var(--border); }
+    .logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0.55rem 0.75rem; border-radius: 9px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.855rem; cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; }
+    .logout-btn:hover { background: rgba(232,67,26,0.08); color: var(--accent2); border-color: rgba(232,67,26,0.3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 58px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.8rem; flex-shrink: 0; }
+    .topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+    .topbar-breadcrumb { font-size: 0.72rem; color: var(--muted); }
+    .topbar-badge { background: rgba(245,166,35,0.12); color: var(--accent); border: 1px solid rgba(245,166,35,0.25); border-radius: 6px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 3px 8px; }
+    .content { flex: 1; overflow-y: auto; padding: 1.8rem; animation: fadeIn 0.35s ease both; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .section-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.03em; margin-bottom: 1.5rem; }
+    .section-title span { color: var(--accent); }
+
+    /* ── Search bar ── */
+    .search-wrap { max-width: 540px; margin-bottom: 1.8rem; }
+    .search-form { display: flex; gap: 8px; }
+    .search-input-wrap { flex: 1; position: relative; }
+    .search-input-wrap input {
+      width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+      padding: 0.72rem 1rem 0.72rem 2.4rem; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-input-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245,166,35,0.08); }
+    .search-input-wrap input::placeholder { color: var(--muted2); }
+    .search-icon { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1rem; pointer-events: none; }
+    .btn-search { padding: 0.72rem 1.3rem; border-radius: 12px; border: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #0b0b0a; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
+    .btn-search:hover { opacity: 0.88; }
+
+    /* ── Alerts ── */
+    .alert { border-radius: 10px; padding: 0.7rem 1rem; font-size: 0.83rem; margin-bottom: 1.3rem; }
+    .alert-success { background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3); color: var(--success); }
+    .alert-error   { background: rgba(255,92,92,0.1);  border: 1px solid rgba(255,92,92,0.3);  color: var(--error); }
+
+    /* ── States ── */
+    .empty-state { text-align: center; color: var(--muted); padding: 3rem 1rem; }
+    .empty-icon  { font-size: 2.5rem; opacity: 0.2; margin-bottom: 0.6rem; }
+    .empty-text  { font-size: 0.85rem; }
+
+    .prompt-state { text-align: center; color: var(--muted); padding: 3rem 1rem; }
+    .prompt-icon  { font-size: 2.5rem; opacity: 0.2; margin-bottom: 0.6rem; }
+    .prompt-text  { font-size: 0.85rem; }
+
+    /* ── Student cards ── */
+    .students-grid { display: flex; flex-direction: column; gap: 10px; }
+
+    .student-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem;
+      transition: border-color 0.15s;
+      animation: rowIn 0.3s ease both;
+    }
+    @keyframes rowIn { from { opacity:0; transform:translateX(-6px); } to { opacity:1; transform:translateX(0); } }
+    .student-card:hover { border-color: var(--muted2); }
+
+    .student-avatar {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid; place-items: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+      color: #0b0b0a; flex-shrink: 0;
+    }
+
+    .student-info { flex: 1; min-width: 0; }
+    .student-name { font-weight: 600; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .student-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .student-meta span { color: var(--muted2); margin: 0 4px; }
+
+    .balance-pill {
+      background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.2);
+      border-radius: 20px; padding: 3px 12px;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem;
+      color: var(--success); flex-shrink: 0;
+    }
+
+    /* Inline recharge form */
+    .recharge-form {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .amount-input-wrap { position: relative; }
+    .amount-prefix {
+      position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: 0.82rem; font-weight: 600; pointer-events: none;
+    }
+    .amount-input {
+      width: 110px; background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: 9px; color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem; padding: 0.55rem 0.7rem 0.55rem 1.6rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .amount-input:focus { border-color: var(--accent); }
+    .amount-input::placeholder { color: var(--muted2); }
+
+    .btn-recharge {
+      padding: 0.55rem 1rem; border-radius: 9px; border: none;
+      background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.25);
+      color: var(--accent); font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 0.8rem; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-recharge:hover { background: rgba(245,166,35,0.22); }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.72rem 1.1rem; font-size: 0.83rem; opacity: 0; transform: translateY(8px); transition: opacity 0.3s, transform 0.3s; z-index: 999; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { border-color: rgba(76,175,125,0.4); color: var(--success); }
+    .toast.error   { border-color: rgba(255,92,92,0.4);  color: var(--error); }
+
+    .mobile-toggle { display: none; background: transparent; border: none; color: var(--text); font-size: 1.3rem; cursor: pointer; }
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; left: -100%; top:0; bottom:0; z-index:100; transition: left 0.3s; }
+      .sidebar.open { left:0; }
+      .mobile-toggle { display: block; }
+      .recharge-form { flex-wrap: wrap; }
+      .student-card { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🍽</div>
+      <div class="brand-text">Campus<span>Eats</span></div>
+    </div>
+    <div class="admin-pill">
+      <div class="admin-avatar">{{ request.session.user_name|first|upper }}</div>
+      <div>
+        <div class="admin-name">{{ request.session.user_name }}</div>
+        <div class="admin-role">{{ request.session.role }}</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Overview</div>
+        <a href="{% url 'admin_dashboard' %}" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">User Management</div>
+        <a href="{% url 'manage_staff' %}"    class="nav-item "><span class="nav-icon">👤</span> Staff</a>
+        <a href="{% url 'manage_students' %}" class="nav-item"><span class="nav-icon">🎓</span> Students</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Menu Management</div>
+        <a href="{% url 'manage_category' %}" class="nav-item"><span class="nav-icon">◈</span> Categories</a>
+        <a href="{% url 'manage_items' %}"    class="nav-item"><span class="nav-icon">▤</span> Items</a>
+        <a href="{% url 'prepare_menu' %}"    class="nav-item"><span class="nav-icon">✦</span> Prepare Menu</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Wallet & Finance</div>
+        <a href="{% url 'recharge_wallet' %}"     class="nav-item active"><span class="nav-icon">◎</span> Recharge Wallet</a>
+        <a href="{% url 'transaction_history' %}" class="nav-item"><span class="nav-icon">↕</span> Transaction History</a>
+        <a href="{% url 'revenue' %}"             class="nav-item"><span class="nav-icon">◉</span> Revenue</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Orders</div>
+        <a href="{% url 'order_history' %}" class="nav-item"><span class="nav-icon">≡</span> Order History</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="{% url 'logout' %}" class="logout-btn"><span>⇤</span> Logout</a>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:0.8rem;">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <div class="topbar-title">Recharge Wallet</div>
+          <div class="topbar-breadcrumb">Admin &rsaquo; Wallet &amp; Finance &rsaquo; Recharge</div>
+        </div>
+      </div>
+      <span class="topbar-badge">{{ request.session.role }}</span>
+    </div>
+
+    <div class="content">
+      <div class="section-title">Recharge <span>Wallet</span></div>
+
+      <div class="toast" id="toast"></div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Search bar -->
+      <div class="search-wrap">
+        <form method="GET" action="{% url 'recharge_wallet' %}" class="search-form">
+          <div class="search-input-wrap">
+            <span class="search-icon">⌕</span>
+            <input type="text" name="q" value="{{ search_query }}"
+                   placeholder="Search by name or admission number…" autofocus/>
+          </div>
+          <button type="submit" class="btn-search">Search</button>
+        </form>
+      </div>
+
+      <!-- Results -->
+      {% if students is None %}
+        <div class="prompt-state">
+          <div class="prompt-icon">◎</div>
+          <div class="prompt-text">Search for a student to recharge their wallet.</div>
+        </div>
+
+      {% elif students|length == 0 %}
+        <div class="empty-state">
+          <div class="empty-icon">◎</div>
+          <div class="empty-text">No students found for <strong>"{{ search_query }}"</strong></div>
+        </div>
+
+      {% else %}
+        <div class="students-grid">
+          {% for student in students %}
+            <div class="student-card">
+
+              <div class="student-avatar">{{ student.name|first|upper }}</div>
+
+              <div class="student-info">
+                <div class="student-name">{{ student.name }}</div>
+                <div class="student-meta">
+                  {{ student.admission_number }}
+                  <span>·</span>
+                  {{ student.email }}
+                </div>
+              </div>
+
+              <div class="balance-pill">₹{{ student.current_balance|floatformat:2 }}</div>
+
+              <!-- Inline recharge form -->
+              <form method="POST" action="{% url 'recharge_wallet' %}?q={{ search_query }}" class="recharge-form">
+                {% csrf_token %}
+                <input type="hidden" name="student_id" value="{{ student.id }}"/>
+                <div class="amount-input-wrap">
+                  <span class="amount-prefix">₹</span>
+                  <input type="number" name="amount" class="amount-input"
+                         placeholder="Amount" min="1" step="1" required/>
+                </div>
+                <button type="submit" class="btn-recharge">⊕ Recharge</button>
+              </form>
+
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<script>
+  {% if messages %}
+    {% for message in messages %}
+      showToast("{{ message }}", "{{ message.tags }}");
+    {% endfor %}
+  {% endif %}
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = (type === 'error' ? '✕  ' : '✓  ') + msg;
+    t.className = 'toast ' + (type === 'error' ? 'error' : 'success') + ' show';
+    setTimeout(() => t.classList.remove('show'), 4000);
+  }
+</script>
+</body>
+</html>

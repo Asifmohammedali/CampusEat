@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Canteen Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f0e0c;
+      --card:      #1a1916;
+      --border:    #2e2c28;
+      --accent:    #f5a623;
+      --accent2:   #e8431a;
+      --text:      #f0ece4;
+      --muted:     #7a776e;
+      --input-bg:  #232119;
+      --error:     #ff5c5c;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow: hidden;
+    }
+
+    /* Ambient background blobs */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(245,166,35,0.07) 0%, transparent 70%);
+      top: -150px; left: -150px;
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(232,67,26,0.06) 0%, transparent 70%);
+      bottom: -100px; right: -100px;
+      pointer-events: none;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 440px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Brand bar */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 2.5rem;
+    }
+    .brand-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 1.3rem;
+    }
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    .brand-name span {
+      color: var(--accent);
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.2rem 2rem;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      margin-bottom: 0.4rem;
+    }
+    .card-sub {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    /* Toggle tabs */
+    .tab-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 1.8rem;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.55rem;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #0f0e0c;
+      font-weight: 600;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 0.45rem;
+    }
+    input {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      padding: 0.75rem 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input::placeholder { color: #4a4840; }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245,166,35,0.1);
+    }
+
+    /* Admission field — hidden by default, shown for students */
+    #admission-group {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease;
+      margin-bottom: 0;
+    }
+    #admission-group.visible {
+      max-height: 100px;
+      opacity: 1;
+      margin-bottom: 1.1rem;
+    }
+
+    /* Error message */
+    .error-msg {
+      display: none;
+      background: rgba(255,92,92,0.1);
+      border: 1px solid rgba(255,92,92,0.3);
+      color: var(--error);
+      font-size: 0.83rem;
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      margin-bottom: 1.1rem;
+    }
+    .error-msg.show { display: block; }
+
+    /* Submit */
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      border: none;
+      border-radius: 10px;
+      color: #0f0e0c;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+      padding: 0.85rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      margin-top: 0.5rem;
+    }
+    .btn-login:hover  { opacity: 0.88; }
+    .btn-login:active { transform: scale(0.98); }
+
+    .signup-row { text-align:center; font-size:0.8rem; color:var(--muted); margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border); }
+    .signup-row a { color:var(--accent); text-decoration:none; font-weight:600; }
+    .signup-row a:hover { text-decoration:underline; }
+    .footer-note {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <div class="brand">
+    <div class="brand-icon">🍽</div>
+    <div class="brand-name">Campus<span>Eats</span></div>
+  </div>
+
+  <div class="card">
+    <h1 class="card-title">Welcome back</h1>
+    <p class="card-sub">Sign in to your canteen account</p>
+
+    <!-- Login type toggle -->
+    <div class="tab-group">
+      <button class="tab-btn active" onclick="switchMode('email')" id="tab-email">
+        Email Login
+      </button>
+      <button class="tab-btn" onclick="switchMode('admission')" id="tab-admission">
+        Admission No.
+      </button>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="error-msg show">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'login' %}" id="login-form">
+      {% csrf_token %}
+      <input type="hidden" name="login_mode" id="login_mode" value="email"/>
+
+      <!-- Email field -->
+      <div class="form-group" id="email-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="you@college.edu" autocomplete="email"/>
+      </div>
+
+      <!-- Admission number field (students only) -->
+      <div class="form-group" id="admission-group">
+        <label for="admission_number">Admission Number</label>
+        <input type="text" id="admission_number" name="admission_number" placeholder="e.g. ADM2024001"/>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+
+      <button type="submit" class="btn-login">Sign In →</button>
+    </form>
+
+    <p class="footer-note"> &nbsp;·&nbsp; Use Email or Admission No for Login.</p>
+
+    <div class="signup-row">
+      New student? <a href="{% url 'register' %}">Create an account →</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function switchMode(mode) {
+    const admGroup  = document.getElementById('admission-group');
+    const emailGroup = document.getElementById('email-group');
+    const tabEmail  = document.getElementById('tab-email');
+    const tabAdm    = document.getElementById('tab-admission');
+    const modeInput = document.getElementById('login_mode');
+    const emailInput = document.getElementById('email');
+    const admInput   = document.getElementById('admission_number');
+
+    if (mode === 'admission') {
+      admGroup.classList.add('visible');
+      emailGroup.style.display = 'none';
+      tabAdm.classList.add('active');
+      tabEmail.classList.remove('active');
+      modeInput.value = 'admission';
+      emailInput.removeAttribute('required');
+      admInput.setAttribute('required', '');
+    } else {
+      admGroup.classList.remove('visible');
+      emailGroup.style.display = 'block';
+      tabEmail.classList.add('active');
+      tabAdm.classList.remove('active');
+      modeInput.value = 'email';
+      admInput.removeAttribute('required');
+      emailInput.setAttribute('required', '');
+    }
+  }
+
+  // Set initial required
+  document.getElementById('email').setAttribute('required', '');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order Management — CampusEats Staff</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:#0b0b0a; --sidebar:#111110; --card:#181816; --border:#272522;
+      --accent:#f5a623; --accent2:#e8431a; --text:#ede9e0; --muted:#6b6860;
+      --muted2:#3a3835; --input-bg:#0f0f0e; --hover:#1e1d1b;
+      --success:#4caf7d; --error:#ff5c5c; --sidebar-w:260px;
+    }
+    html,body { height:100%; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; }
+    .layout { display:flex; height:100vh; overflow:hidden; }
+
+    /* Sidebar */
+    .sidebar { width:var(--sidebar-w); min-width:var(--sidebar-w); background:var(--sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; }
+    .sidebar-brand { display:flex; align-items:center; gap:10px; padding:1.4rem 1.2rem 1.2rem; border-bottom:1px solid var(--border); }
+    .brand-icon { width:36px; height:36px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:9px; display:grid; place-items:center; font-size:1rem; }
+    .brand-text { font-family:'Syne',sans-serif; font-weight:800; font-size:1.05rem; }
+    .brand-text span { color:var(--accent); }
+    .staff-pill { margin:1rem 1rem 0.5rem; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:0.75rem 0.9rem; display:flex; align-items:center; gap:10px; }
+    .staff-avatar { width:34px; height:34px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:50%; display:grid; place-items:center; font-family:'Syne',sans-serif; font-weight:700; font-size:0.8rem; color:#0b0b0a; flex-shrink:0; }
+    .staff-name { font-weight:600; font-size:0.82rem; }
+    .staff-role { font-size:0.7rem; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; }
+    .nav-section { padding:1rem 0.8rem 0.2rem; }
+    .nav-label { font-size:0.65rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted2); padding:0 0.4rem; margin-bottom:0.35rem; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:0.55rem 0.75rem; border-radius:9px; color:var(--muted); text-decoration:none; font-size:0.855rem; transition:background 0.15s,color 0.15s; margin-bottom:2px; }
+    .nav-item:hover { background:var(--hover); color:var(--text); }
+    .nav-item.active { background:rgba(245,166,35,0.1); color:var(--accent); }
+    .nav-icon { font-size:1rem; width:20px; text-align:center; flex-shrink:0; opacity:0.6; }
+    .nav-item:hover .nav-icon,.nav-item.active .nav-icon { opacity:1; }
+    .sidebar-footer { margin-top:auto; padding:1rem; border-top:1px solid var(--border); }
+    .logout-btn { display:flex; align-items:center; gap:10px; width:100%; padding:0.55rem 0.75rem; border-radius:9px; background:transparent; border:1px solid var(--border); color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.855rem; cursor:pointer; transition:background 0.15s,color 0.15s; text-decoration:none; }
+    .logout-btn:hover { background:rgba(232,67,26,0.08); color:var(--accent2); border-color:rgba(232,67,26,0.3); }
+
+    /* Main */
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .topbar { height:58px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 1.8rem; flex-shrink:0; }
+    .topbar-title { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; }
+    .topbar-breadcrumb { font-size:0.72rem; color:var(--muted); }
+    .topbar-badge { background:rgba(245,166,35,0.12); color:var(--accent); border:1px solid rgba(245,166,35,0.25); border-radius:6px; font-size:0.7rem; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; padding:3px 8px; }
+    .content { flex:1; overflow-y:auto; padding:1.8rem; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .content { animation:fadeIn 0.35s ease both; }
+    .section-title { font-family:'Syne',sans-serif; font-weight:800; font-size:1.35rem; letter-spacing:-0.03em; margin-bottom:1.4rem; }
+    .section-title span { color:var(--accent); }
+    .mobile-toggle { display:none; background:transparent; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; }
+    @media(max-width:768px){ .sidebar{position:fixed;left:-100%;top:0;bottom:0;z-index:100;transition:left 0.3s} .sidebar.open{left:0} .mobile-toggle{display:block} }
+
+    /* ── Order cards ── */
+    .orders-grid { display:flex; flex-direction:column; gap:1rem; }
+
+    .order-card { background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden; transition:border-color 0.15s; }
+    .order-card:hover { border-color:var(--muted2); }
+
+    /* Card top bar */
+    .oc-header { display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:0.6rem; }
+    .oc-left { display:flex; align-items:center; gap:10px; }
+    .oc-id { font-family:'Syne',sans-serif; font-weight:800; font-size:0.95rem; }
+    .oc-student { font-size:0.78rem; color:var(--muted); }
+    .oc-student strong { color:var(--text); }
+    .oc-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .oc-time { font-size:0.74rem; color:var(--muted); }
+    .oc-amount { font-family:'Syne',sans-serif; font-weight:800; color:var(--accent); font-size:0.95rem; }
+
+    /* Status pills */
+    .status-pill { font-size:0.67rem; font-weight:700; border-radius:20px; padding:3px 10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; }
+    .PENDING   { background:rgba(245,166,35,0.1);  color:#f5a623; border:1px solid rgba(245,166,35,0.3); }
+    .CONFIRMED { background:rgba(76,175,125,0.1);  color:#4caf7d; border:1px solid rgba(76,175,125,0.3); }
+    .PREPARING { background:rgba(212,82,26,0.1);   color:#d4521a; border:1px solid rgba(212,82,26,0.3); }
+    .READY     { background:rgba(76,175,125,0.15); color:#4caf7d; border:1px solid rgba(76,175,125,0.4); }
+    .REJECTED  { background:rgba(255,92,92,0.1);   color:#ff5c5c; border:1px solid rgba(255,92,92,0.3); }
+
+    /* Card body */
+    .oc-body { padding:0.8rem 1.2rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+
+    /* Item pills preview */
+    .item-pills { display:flex; gap:5px; flex-wrap:wrap; flex:1; }
+    .item-pill { background:var(--input-bg); border:1px solid var(--border); border-radius:20px; padding:3px 10px; font-size:0.72rem; color:var(--muted); }
+    .view-details-btn { padding:0.42rem 0.9rem; border-radius:9px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.78rem; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+    .view-details-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* Action buttons bar */
+    .oc-actions { padding:0.8rem 1.2rem; border-top:1px solid var(--border); display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:var(--input-bg); }
+    .accepted-by { font-size:0.72rem; color:var(--muted); margin-right:auto; }
+    .accepted-by strong { color:var(--text); }
+
+    .btn-accept   { padding:0.48rem 1.1rem; border-radius:9px; border:none; background:rgba(76,175,125,0.12); border:1px solid rgba(76,175,125,0.3); color:#4caf7d; font-family:'Syne',sans-serif; font-weight:700; font-size:0.8rem; cursor:pointer; transition:background 0.15s; }
+    .btn-accept:hover   { background:rgba(76,175,125,0.25); }
+    .btn-reject   { padding:0.48rem 1.1rem; border-radius:9px; border:1px solid rgba(255,92,92,0.3); background:rgba(255,92,92,0.08); color:#ff5c5c; font-family:'Syne',sans-serif; font-weight:700; font-size:0.8rem; cursor:pointer; transition:background 0.15s; }
+    .btn-reject:hover   { background:rgba(255,92,92,0.2); }
+    .btn-preparing { padding:0.48rem 1.1rem; border-radius:9px; border:1px solid rgba(212,82,26,0.35); background:rgba(212,82,26,0.1); color:#d4521a; font-family:'Syne',sans-serif; font-weight:700; font-size:0.8rem; cursor:pointer; transition:background 0.15s; }
+    .btn-preparing:hover { background:rgba(212,82,26,0.22); }
+    .btn-ready    { padding:0.48rem 1.1rem; border-radius:9px; border:1px solid rgba(245,166,35,0.35); background:rgba(245,166,35,0.1); color:#f5a623; font-family:'Syne',sans-serif; font-weight:700; font-size:0.8rem; cursor:pointer; transition:background 0.15s; }
+    .btn-ready:hover    { background:rgba(245,166,35,0.22); }
+    .btn-delivered { padding:0.48rem 1.1rem; border-radius:9px; border:none; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0b0b0a; font-family:'Syne',sans-serif; font-weight:700; font-size:0.8rem; cursor:pointer; transition:opacity 0.15s; }
+    .btn-delivered:hover { opacity:0.88; }
+    .btn-print-receipt { padding:0.48rem 1.1rem; border-radius:9px; border:1px solid rgba(245,166,35,0.3); background:rgba(245,166,35,0.07); color:var(--accent); font-family:'Syne',sans-serif; font-weight:700; font-size:0.8rem; cursor:pointer; transition:background 0.15s; text-decoration:none; display:inline-flex; align-items:center; gap:5px; }
+    .btn-print-receipt:hover { background:rgba(245,166,35,0.18); }
+
+    /* Rejected note */
+    .rejected-note { font-size:0.75rem; color:var(--error); background:rgba(255,92,92,0.06); border-radius:7px; padding:0.4rem 0.8rem; flex:1; }
+
+    /* Empty */
+    .empty-state { text-align:center; padding:4rem 1rem; color:var(--muted); }
+    .empty-icon  { font-size:2.5rem; opacity:0.18; margin-bottom:0.8rem; }
+    .empty-sub   { font-size:0.84rem; margin-top:0.4rem; }
+
+    /* ── Detail Modal ── */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.78); backdrop-filter:blur(4px); z-index:200; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.show { display:flex; }
+    .modal { background:var(--card); border:1px solid var(--border); border-radius:18px; width:100%; max-width:620px; max-height:82vh; display:flex; flex-direction:column; animation:mIn 0.24s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes mIn { from{opacity:0;transform:scale(0.93) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .modal-top { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.4rem; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .modal-heading { font-family:'Syne',sans-serif; font-weight:700; font-size:0.95rem; }
+    .modal-close { width:28px; height:28px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; display:grid; place-items:center; transition:background 0.15s; }
+    .modal-close:hover { background:rgba(232,67,26,0.1); color:var(--accent2); }
+    .modal-body { padding:1.2rem 1.4rem; overflow-y:auto; flex:1; }
+    .modal-loading { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; }
+
+    /* Detail partial styles */
+    .detail-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.1rem; flex-wrap:wrap; gap:0.7rem; }
+    .detail-student { display:flex; align-items:center; gap:10px; }
+    .ds-avatar { width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:grid; place-items:center; font-family:'Syne',sans-serif; font-weight:800; font-size:0.85rem; color:#0b0b0a; flex-shrink:0; }
+    .ds-name { font-weight:600; font-size:0.88rem; }
+    .ds-adm  { font-size:0.7rem; color:var(--muted); }
+    .detail-tbl { width:100%; border-collapse:collapse; }
+    .detail-tbl thead th { font-size:0.66rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:0.55rem 0.7rem; border-bottom:1px solid var(--border); text-align:left; background:var(--input-bg); }
+    .detail-tbl tbody td { padding:0.7rem; border-bottom:1px solid #1c1b19; font-size:0.855rem; vertical-align:middle; }
+    .detail-tbl tbody tr:last-child td { border-bottom:none; }
+    .detail-tbl tfoot .total-row td { border-top:1px solid var(--border); background:var(--input-bg); font-family:'Syne',sans-serif; font-weight:700; font-size:0.88rem; padding:0.7rem; border-bottom:none; }
+    .detail-tbl tfoot .grand-cell { color:var(--accent); font-size:1rem; }
+    .item-name-cell { display:flex; align-items:center; gap:8px; font-weight:500; }
+    .dt-thumb { width:30px; height:30px; border-radius:6px; object-fit:cover; border:1px solid var(--border); flex-shrink:0; }
+    .dt-thumb-ph { width:30px; height:30px; border-radius:6px; background:var(--input-bg); border:1px solid var(--border); display:grid; place-items:center; font-size:0.85rem; flex-shrink:0; }
+    .cat-tag { background:rgba(245,166,35,0.08); color:var(--accent); border:1px solid rgba(245,166,35,0.15); border-radius:20px; font-size:0.66rem; font-weight:600; padding:2px 8px; white-space:nowrap; }
+    .muted-cell { color:var(--muted); font-size:0.82rem; }
+    .qty-cell { font-family:'Syne',sans-serif; font-weight:700; }
+    .subtotal-cell { font-family:'Syne',sans-serif; font-weight:700; color:var(--accent); }
+    .reject-note { margin-top:0.8rem; background:rgba(255,92,92,0.07); border:1px solid rgba(255,92,92,0.2); border-radius:9px; padding:0.6rem 0.9rem; font-size:0.8rem; color:var(--error); }
+
+    /* ── Reject Reason Modal ── */
+    .reason-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); z-index:300; align-items:center; justify-content:center; padding:1rem; }
+    .reason-modal.show { display:flex; }
+    .reason-box { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.8rem; width:100%; max-width:400px; animation:mIn 0.22s ease; }
+    .reason-title { font-family:'Syne',sans-serif; font-weight:800; font-size:1rem; margin-bottom:0.4rem; }
+    .reason-sub { font-size:0.8rem; color:var(--muted); margin-bottom:1.1rem; }
+    .reason-textarea { width:100%; background:var(--input-bg); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.875rem; padding:0.75rem 0.9rem; outline:none; resize:vertical; min-height:90px; transition:border-color 0.2s; }
+    .reason-textarea:focus { border-color:var(--error); }
+    .reason-actions { display:flex; gap:8px; margin-top:1.1rem; }
+    .btn-confirm-reject { flex:1; padding:0.65rem; border-radius:9px; border:none; background:linear-gradient(135deg,#ff5c5c,#e8431a); color:#fff; font-family:'Syne',sans-serif; font-weight:700; font-size:0.85rem; cursor:pointer; }
+    .btn-cancel-reject  { flex:1; padding:0.65rem; border-radius:9px; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:0.85rem; cursor:pointer; }
+    .btn-cancel-reject:hover { background:var(--hover); color:var(--text); }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🍽</div>
+      <div class="brand-text">Campus<span>Eats</span></div>
+    </div>
+    <div class="staff-pill">
+      <div class="staff-avatar">{{ request.session.user_name|first|upper }}</div>
+      <div>
+        <div class="staff-name">{{ request.session.user_name }}</div>
+        <div class="staff-role">Staff</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Overview</div>
+        <a href="{% url 'staff_dashboard' %}" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Menu</div>
+        <a href="{% url 'staff_prepare_menu' %}" class="nav-item"><span class="nav-icon">✦</span> Prepare Menu</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Orders</div>
+        <a href="{% url 'staff_order_management' %}" class="nav-item active"><span class="nav-icon">◈</span> Order Management</a>
+        <a href="{% url 'staff_order_history' %}"    class="nav-item"><span class="nav-icon">≡</span> Order History</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="{% url 'logout' %}" class="logout-btn"><span>⇤</span> Logout</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:0.8rem;">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <div class="topbar-title">Order Management</div>
+          <div class="topbar-breadcrumb">Staff &rsaquo; Orders &rsaquo; Management</div>
+        </div>
+      </div>
+      <span class="topbar-badge">STAFF</span>
+    </div>
+
+    <div class="content">
+      <div class="section-title">Today's <span>Orders</span>
+        <span style="font-size:0.75rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400;margin-left:8px;">{{ today|date:"d M Y" }}</span>
+      </div>
+
+      {% if orders %}
+        <div class="orders-grid">
+          {% for order in orders %}
+          <div class="order-card" id="orderCard-{{ order.id }}">
+
+            <!-- Header -->
+            <div class="oc-header">
+              <div class="oc-left">
+                <div class="oc-id">#{{ order.id }}</div>
+                <div class="oc-student"><strong>{{ order.user.name }}</strong> &nbsp;·&nbsp; {{ order.user.admission_number }}</div>
+              </div>
+              <div class="oc-right">
+                <span class="oc-time">{{ order.ordered_at|time:"h:i A" }}</span>
+                <span class="status-pill {{ order.status }}">{{ order.get_status_display }}</span>
+                <span class="oc-amount">₹{{ order.total_amount|floatformat:2 }}</span>
+              </div>
+            </div>
+
+            <!-- Item preview + view details -->
+            <div class="oc-body">
+              <div class="item-pills">
+                {% for ci in order.cart_items.all %}
+                  <span class="item-pill">{{ ci.item.name }} ×{{ ci.quantity }}</span>
+                {% endfor %}
+              </div>
+              <button class="view-details-btn" onclick="viewDetails({{ order.id }})">≡ View Details</button>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="oc-actions">
+
+              {% if order.accepted_by %}
+                <span class="accepted-by">Handled by <strong>{{ order.accepted_by.name }}</strong></span>
+              {% else %}
+                <span class="accepted-by"></span>
+              {% endif %}
+
+              <!-- PENDING: show Accept + Reject -->
+              {% if order.status == 'PENDING' %}
+                <form method="POST" action="{% url 'update_order_status' order.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="accept"/>
+                  <button type="submit" class="btn-accept">✓ Accept</button>
+                </form>
+                <button class="btn-reject" onclick="openRejectModal({{ order.id }})">✕ Reject</button>
+
+              <!-- CONFIRMED: show Preparing -->
+              {% elif order.status == 'CONFIRMED' %}
+                <form method="POST" action="{% url 'update_order_status' order.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="preparing"/>
+                  <button type="submit" class="btn-preparing">⏳ Start Preparing</button>
+                </form>
+                <a href="{% url 'print_receipt' order.id %}" target="_blank" class="btn-print-receipt">🖨 Print Receipt</a>
+
+              <!-- PREPARING: show Ready -->
+              {% elif order.status == 'PREPARING' %}
+                <form method="POST" action="{% url 'update_order_status' order.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="ready"/>
+                  <button type="submit" class="btn-ready">✦ Mark Ready</button>
+                </form>
+
+              <!-- READY: show Delivered -->
+              {% elif order.status == 'READY' %}
+                <form method="POST" action="{% url 'update_order_status' order.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delivered"/>
+                  <button type="submit" class="btn-delivered">✓ Mark Delivered</button>
+                </form>
+
+              <!-- REJECTED: show reason -->
+              {% elif order.status == 'REJECTED' %}
+                <span class="rejected-note">✕ {{ order.rejected_reason|default:"Rejected by staff." }}</span>
+
+              {% endif %}
+
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">◈</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;">No active orders right now</div>
+          <div class="empty-sub">All of today's orders have been delivered or cancelled.</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ── Order Detail Modal ── -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-top">
+      <div class="modal-heading" id="modalHeading">Order Details</div>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <div class="modal-loading">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Reject Reason Modal ── -->
+<div class="reason-modal" id="rejectModal">
+  <div class="reason-box">
+    <div class="reason-title">Reason for Rejection</div>
+    <div class="reason-sub">Please provide a reason. This will be visible to the student.</div>
+    <textarea class="reason-textarea" id="rejectReason" placeholder="e.g. Item out of stock, kitchen closed…"></textarea>
+    <div class="reason-actions">
+      <button class="btn-cancel-reject" onclick="closeRejectModal()">Cancel</button>
+      <button class="btn-confirm-reject" onclick="submitReject()">Confirm Reject</button>
+    </div>
+  </div>
+  <form method="POST" id="rejectForm" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="reject"/>
+    <input type="hidden" name="reason" id="rejectReasonHidden"/>
+  </form>
+</div>
+
+<script>
+  let currentRejectOrderId = null;
+
+  // ── View Details ─────────────────────────────────────────────────────
+  function viewDetails(orderId) {
+    document.getElementById('modalHeading').textContent = 'Order #' + orderId;
+    document.getElementById('modalBody').innerHTML = '<div class="modal-loading">Loading…</div>';
+    document.getElementById('detailModal').classList.add('show');
+
+    const url = "{% url 'staff_order_detail_partial' 0 %}".replace('/0/', '/' + orderId + '/');
+    fetch(url)
+      .then(r => r.text())
+      .then(html => { document.getElementById('modalBody').innerHTML = html; })
+      .catch(() => { document.getElementById('modalBody').innerHTML = '<div class="modal-loading">Failed to load.</div>'; });
+  }
+
+  function closeDetailModal() { document.getElementById('detailModal').classList.remove('show'); }
+  document.getElementById('detailModal').addEventListener('click', e => { if(e.target === document.getElementById('detailModal')) closeDetailModal(); });
+
+  // ── Reject Modal ─────────────────────────────────────────────────────
+  function openRejectModal(orderId) {
+    currentRejectOrderId = orderId;
+    document.getElementById('rejectReason').value = '';
+    document.getElementById('rejectModal').classList.add('show');
+    setTimeout(() => document.getElementById('rejectReason').focus(), 100);
+  }
+
+  function closeRejectModal() {
+    document.getElementById('rejectModal').classList.remove('show');
+    currentRejectOrderId = null;
+  }
+
+  function submitReject() {
+    const reason = document.getElementById('rejectReason').value.trim();
+    if (!reason) {
+      document.getElementById('rejectReason').style.borderColor = 'var(--error)';
+      document.getElementById('rejectReason').placeholder = 'Reason is required!';
+      return;
+    }
+    const url = "{% url 'update_order_status' 0 %}".replace('/0/', '/' + currentRejectOrderId + '/');
+    const form = document.getElementById('rejectForm');
+    form.action = url;
+    document.getElementById('rejectReasonHidden').value = reason;
+    form.submit();
+  }
+
+  document.getElementById('rejectModal').addEventListener('click', e => { if(e.target === document.getElementById('rejectModal')) closeRejectModal(); });
+</script>
+</body>
+</html>

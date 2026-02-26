@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prepare Menu — CampusEats Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0b0b0a;
+      --sidebar:   #111110;
+      --card:      #181816;
+      --border:    #272522;
+      --accent:    #f5a623;
+      --accent2:   #e8431a;
+      --text:      #ede9e0;
+      --muted:     #6b6860;
+      --muted2:    #3a3835;
+      --input-bg:  #0f0f0e;
+      --hover:     #1e1d1b;
+      --success:   #4caf7d;
+      --error:     #ff5c5c;
+      --sidebar-w: 260px;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 1.4rem 1.2rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .brand-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 9px; display: grid; place-items: center; font-size: 1rem; }
+    .brand-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; }
+    .brand-text span { color: var(--accent); }
+    .admin-pill { margin: 1rem 1rem 0.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 0.9rem; display: flex; align-items: center; gap: 10px; }
+    .admin-avatar { width: 34px; height: 34px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 50%; display: grid; place-items: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem; color: #0b0b0a; flex-shrink: 0; }
+    .admin-name { font-weight: 600; font-size: 0.82rem; }
+    .admin-role { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+    .nav-section { padding: 1rem 0.8rem 0.2rem; }
+    .nav-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted2); padding: 0 0.4rem; margin-bottom: 0.35rem; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 0.55rem 0.75rem; border-radius: 9px; color: var(--muted); text-decoration: none; font-size: 0.855rem; transition: background 0.15s, color 0.15s; margin-bottom: 2px; }
+    .nav-item:hover { background: var(--hover); color: var(--text); }
+    .nav-item.active { background: rgba(245,166,35,0.1); color: var(--accent); }
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; opacity: 0.6; }
+    .nav-item:hover .nav-icon, .nav-item.active .nav-icon { opacity: 1; }
+    .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid var(--border); }
+    .logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0.55rem 0.75rem; border-radius: 9px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.855rem; cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; }
+    .logout-btn:hover { background: rgba(232,67,26,0.08); color: var(--accent2); border-color: rgba(232,67,26,0.3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 58px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.8rem; flex-shrink: 0; }
+    .topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+    .topbar-breadcrumb { font-size: 0.72rem; color: var(--muted); }
+    .topbar-badge { background: rgba(245,166,35,0.12); color: var(--accent); border: 1px solid rgba(245,166,35,0.25); border-radius: 6px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 3px 8px; }
+    .content { flex: 1; overflow-y: auto; padding: 1.8rem; animation: fadeIn 0.35s ease both; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Page header ── */
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .section-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.03em; }
+    .section-title span { color: var(--accent); }
+    .date-badge { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.45rem 0.9rem; font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .date-badge strong { color: var(--text); }
+
+    /* ── No-menu prompt ── */
+    .prompt-banner {
+      background: rgba(245,166,35,0.06);
+      border: 1px dashed rgba(245,166,35,0.3);
+      border-radius: 14px;
+      padding: 1.8rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .prompt-icon { font-size: 2.2rem; margin-bottom: 0.6rem; }
+    .prompt-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; }
+    .prompt-sub { font-size: 0.83rem; color: var(--muted); }
+
+    /* ── Grid ── */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; align-items: start; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+    .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; margin-bottom: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .card-icon { width: 28px; height: 28px; background: rgba(245,166,35,0.12); border-radius: 7px; display: grid; place-items: center; font-size: 0.85rem; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1rem; }
+    .count-badge { background: rgba(245,166,35,0.1); color: var(--accent); border: 1px solid rgba(245,166,35,0.2); border-radius: 20px; font-size: 0.7rem; font-weight: 600; padding: 2px 10px; }
+
+    /* ── Add to menu form ── */
+    .search-box { position: relative; margin-bottom: 1rem; }
+    .search-box input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; padding: 0.62rem 0.9rem 0.62rem 2.2rem; outline: none; transition: border-color 0.2s; }
+    .search-box input:focus { border-color: var(--accent); }
+    .search-box::before { content: '⌕'; position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1rem; pointer-events: none; }
+
+    .item-checkbox-list { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; padding-right: 4px; }
+    .item-checkbox-list::-webkit-scrollbar { width: 4px; }
+    .item-checkbox-list::-webkit-scrollbar-track { background: transparent; }
+    .item-checkbox-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .check-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.65rem 0.9rem;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    }
+    .check-item:hover { border-color: rgba(245,166,35,0.3); }
+    .check-item input[type="checkbox"] { display: none; }
+    .check-item.checked { background: rgba(245,166,35,0.06); border-color: rgba(245,166,35,0.3); }
+    .checkbox-box { width: 18px; height: 18px; border: 1px solid var(--border); border-radius: 5px; display: grid; place-items: center; font-size: 0.65rem; color: var(--accent); flex-shrink: 0; transition: background 0.15s, border-color 0.15s; }
+    .check-item.checked .checkbox-box { background: var(--accent); border-color: var(--accent); color: #0b0b0a; }
+
+    .item-thumb { width: 36px; height: 36px; border-radius: 7px; object-fit: cover; background: var(--card); border: 1px solid var(--border); display: grid; place-items: center; color: var(--muted); font-size: 1rem; flex-shrink: 0; overflow: hidden; }
+    .item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name { font-weight: 500; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-meta { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+    .item-price { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; color: var(--accent); flex-shrink: 0; }
+
+    .select-all-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+    .link-btn { background: none; border: none; color: var(--accent); font-size: 0.78rem; cursor: pointer; padding: 0; font-family: 'DM Sans', sans-serif; }
+    .link-btn:hover { text-decoration: underline; }
+
+    .btn-add { width: 100%; margin-top: 1rem; padding: 0.72rem; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #0b0b0a; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.875rem; cursor: pointer; transition: opacity 0.2s, transform 0.15s; }
+    .btn-add:hover { opacity: 0.88; }
+    .btn-add:active { transform: scale(0.98); }
+
+    .empty-state { text-align: center; color: var(--muted); padding: 2rem 1rem; font-size: 0.84rem; }
+    .empty-icon { font-size: 1.8rem; opacity: 0.25; margin-bottom: 0.5rem; }
+
+    /* ── Today's menu list ── */
+    .menu-list { display: flex; flex-direction: column; gap: 7px; }
+    .menu-row { display: flex; align-items: center; gap: 10px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 0.7rem 0.9rem; transition: border-color 0.15s; }
+    .menu-row.unavailable { opacity: 0.55; }
+    .menu-thumb { width: 38px; height: 38px; border-radius: 7px; object-fit: cover; background: var(--card); border: 1px solid var(--border); display: grid; place-items: center; font-size: 1rem; color: var(--muted); flex-shrink: 0; overflow: hidden; }
+    .menu-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .menu-info { flex: 1; min-width: 0; }
+    .menu-name { font-weight: 500; font-size: 0.875rem; }
+    .menu-cat  { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+    .menu-price { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; color: var(--accent); flex-shrink: 0; }
+
+    .status-pill { font-size: 0.68rem; font-weight: 600; border-radius: 20px; padding: 2px 8px; flex-shrink: 0; }
+    .status-pill.available   { background: rgba(76,175,125,0.1);  color: var(--success); border: 1px solid rgba(76,175,125,0.3); }
+    .status-pill.unavailable { background: rgba(255,92,92,0.1);   color: var(--error);   border: 1px solid rgba(255,92,92,0.3); }
+
+    .stockout-btn { padding: 0.35rem 0.7rem; border-radius: 7px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: background 0.15s; border: 1px solid rgba(232,67,26,0.3); background: rgba(232,67,26,0.08); color: var(--accent2); font-family: 'DM Sans', sans-serif; flex-shrink: 0; }
+    .stockout-btn:hover { background: rgba(232,67,26,0.18); }
+    .restock-btn  { padding: 0.35rem 0.7rem; border-radius: 7px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: background 0.15s; border: 1px solid rgba(76,175,125,0.3); background: rgba(76,175,125,0.08); color: var(--success); font-family: 'DM Sans', sans-serif; flex-shrink: 0; }
+    .restock-btn:hover { background: rgba(76,175,125,0.18); }
+
+    /* Alerts */
+    .alert { border-radius: 9px; padding: 0.6rem 0.9rem; font-size: 0.81rem; margin-bottom: 1.2rem; }
+    .alert-success { background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3); color: var(--success); }
+    .alert-error   { background: rgba(255,92,92,0.1);  border: 1px solid rgba(255,92,92,0.3);  color: var(--error); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.72rem 1.1rem; font-size: 0.83rem; opacity: 0; transform: translateY(8px); transition: opacity 0.3s, transform 0.3s; z-index: 999; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { border-color: rgba(76,175,125,0.4); color: var(--success); }
+    .toast.error   { border-color: rgba(255,92,92,0.4);  color: var(--error); }
+
+    .mobile-toggle { display: none; background: transparent; border: none; color: var(--text); font-size: 1.3rem; cursor: pointer; }
+    @media (max-width: 768px) { .sidebar { position: fixed; left: -100%; top:0; bottom:0; z-index:100; transition: left 0.3s; } .sidebar.open { left:0; } .mobile-toggle { display: block; } }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+ <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🍽</div>
+      <div class="brand-text">Campus<span>Eats</span></div>
+    </div>
+    <div class="admin-pill">
+      <div class="admin-avatar">{{ request.session.user_name|first|upper }}</div>
+      <div>
+        <div class="admin-name">{{ request.session.user_name }}</div>
+        <div class="admin-role">{{ request.session.role }}</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Overview</div>
+        <a href="{% url 'admin_dashboard' %}" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">User Management</div>
+        <a href="{% url 'manage_staff' %}"    class="nav-item "><span class="nav-icon">👤</span> Staff</a>
+        <a href="{% url 'manage_students' %}" class="nav-item"><span class="nav-icon">🎓</span> Students</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Menu Management</div>
+        <a href="{% url 'manage_category' %}" class="nav-item"><span class="nav-icon">◈</span> Categories</a>
+        <a href="{% url 'manage_items' %}"    class="nav-item"><span class="nav-icon">▤</span> Items</a>
+        <a href="{% url 'prepare_menu' %}"    class="nav-item active"><span class="nav-icon">✦</span> Prepare Menu</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Wallet & Finance</div>
+        <a href="{% url 'recharge_wallet' %}"     class="nav-item"><span class="nav-icon">◎</span> Recharge Wallet</a>
+        <a href="{% url 'transaction_history' %}" class="nav-item"><span class="nav-icon">↕</span> Transaction History</a>
+        <a href="{% url 'revenue' %}"             class="nav-item"><span class="nav-icon">◉</span> Revenue</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Orders</div>
+        <a href="{% url 'order_history' %}" class="nav-item"><span class="nav-icon">≡</span> Order History</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="{% url 'logout' %}" class="logout-btn"><span>⇤</span> Logout</a>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:0.8rem;">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <div class="topbar-title">Prepare Menu</div>
+          <div class="topbar-breadcrumb">Admin &rsaquo; Menu Management &rsaquo; Prepare Menu</div>
+        </div>
+      </div>
+      <span class="topbar-badge">{{ request.session.role }}</span>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <div class="section-title">Today's <span>Menu</span></div>
+        <div class="date-badge">📅 <strong>{{ today|date:"d M Y, l" }}</strong></div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- No menu prompt -->
+      {% if not has_menu %}
+        <div class="prompt-banner">
+          <div class="prompt-icon">🍽</div>
+          <div class="prompt-title">No menu prepared for today yet!</div>
+          <div class="prompt-sub">Select items from the list below and add them to today's menu.</div>
+        </div>
+      {% endif %}
+
+      <div class="grid">
+
+        <!-- ── Left: Add items to menu ── -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" style="margin-bottom:0;">
+              <div class="card-icon">⊕</div>
+              Add to Today's Menu
+            </div>
+            <span class="count-badge">{{ available_items|length }} available</span>
+          </div>
+
+          {% if available_items %}
+            <form method="POST" action="{% url 'prepare_menu' %}" id="addMenuForm">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="add_to_menu"/>
+
+              <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search items..." oninput="filterItems()"/>
+              </div>
+
+              <div class="select-all-row">
+                <span style="font-size:0.75rem;color:var(--muted);">Select items to add</span>
+                <button type="button" class="link-btn" onclick="selectAll()">Select All</button>
+              </div>
+
+              <div class="item-checkbox-list" id="checkboxList">
+                {% for item in available_items %}
+                  <label class="check-item" id="ci-{{ item.id }}" data-name="{{ item.name|lower }}">
+                    <input type="checkbox" name="item_ids" value="{{ item.id }}" onchange="toggleCheck(this)"/>
+                    <div class="checkbox-box">✓</div>
+                    <div class="item-thumb">
+                      {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}"/>
+                      {% else %}
+                        🍽
+                      {% endif %}
+                    </div>
+                    <div class="item-info">
+                      <div class="item-name">{{ item.name }}</div>
+                      <div class="item-meta">{{ item.category.name }}</div>
+                    </div>
+                    <div class="item-price">₹{{ item.price }}</div>
+                  </label>
+                {% endfor %}
+              </div>
+
+              <button type="submit" class="btn-add">＋ Add Selected to Menu</button>
+            </form>
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-icon">✦</div>
+              All items are already in today's menu!
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- ── Right: Today's menu ── -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" style="margin-bottom:0;">
+              <div class="card-icon">✦</div>
+              Today's Menu
+            </div>
+            <span class="count-badge">{{ todays_menu|length }} items</span>
+          </div>
+
+          <div class="menu-list">
+            {% for entry in todays_menu %}
+              <div class="menu-row {% if entry.status == 'UNAVAILABLE' %}unavailable{% endif %}">
+                <div class="menu-thumb">
+                  {% if entry.item.image %}
+                    <img src="{{ entry.item.image.url }}" alt="{{ entry.item.name }}"/>
+                  {% else %}
+                    🍽
+                  {% endif %}
+                </div>
+                <div class="menu-info">
+                  <div class="menu-name">{{ entry.item.name }}</div>
+                  <div class="menu-cat">{{ entry.item.category.name }} &nbsp;·&nbsp; Added {{ entry.time_added|time:"h:i A" }}</div>
+                </div>
+                <div class="menu-price">₹{{ entry.item.price }}</div>
+                <span class="status-pill {% if entry.status == 'AVAILABLE' %}available{% else %}unavailable{% endif %}">
+                  {{ entry.status|capfirst }}
+                </span>
+                <!-- Stock out / Restock button -->
+                {% if entry.status == 'AVAILABLE' %}
+                  <form method="POST" action="{% url 'prepare_menu' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action"   value="stockout"/>
+                    <input type="hidden" name="menu_id"  value="{{ entry.id }}"/>
+                    <button type="submit" class="stockout-btn">Stock Out</button>
+                  </form>
+                {% else %}
+                  <form method="POST" action="{% url 'prepare_menu' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action"   value="restock"/>
+                    <input type="hidden" name="menu_id"  value="{{ entry.id }}"/>
+                    <button type="submit" class="restock-btn">Restock</button>
+                  </form>
+                {% endif %}
+              </div>
+            {% empty %}
+              <div class="empty-state">
+                <div class="empty-icon">🍽</div>
+                No items in today's menu yet.
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleCheck(input) {
+    const label = input.closest('.check-item');
+    label.classList.toggle('checked', input.checked);
+  }
+
+  function selectAll() {
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach(cb => {
+      if (!cb.closest('.check-item').classList.contains('hidden')) {
+        cb.checked = true;
+        cb.closest('.check-item').classList.add('checked');
+      }
+    });
+  }
+
+  function filterItems() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.check-item').forEach(el => {
+      const match = el.dataset.name.includes(q);
+      el.classList.toggle('hidden', !match);
+      el.style.display = match ? 'flex' : 'none';
+    });
+  }
+
+  {% if messages %}
+    {% for message in messages %}
+      showToast("{{ message }}", "{{ message.tags }}");
+    {% endfor %}
+  {% endif %}
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = (type === 'error' ? '✕  ' : '✓  ') + msg;
+    t.className = 'toast ' + (type === 'error' ? 'error' : 'success') + ' show';
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+</script>
+</body>
+</html>

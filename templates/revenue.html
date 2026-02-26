@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Revenue — CampusEats Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0b0b0a;
+      --sidebar:   #111110;
+      --card:      #181816;
+      --border:    #272522;
+      --accent:    #f5a623;
+      --accent2:   #e8431a;
+      --text:      #ede9e0;
+      --muted:     #6b6860;
+      --muted2:    #3a3835;
+      --input-bg:  #0f0f0e;
+      --hover:     #1e1d1b;
+      --success:   #4caf7d;
+      --error:     #ff5c5c;
+      --sidebar-w: 260px;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 1.4rem 1.2rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .brand-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 9px; display: grid; place-items: center; font-size: 1rem; }
+    .brand-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; }
+    .brand-text span { color: var(--accent); }
+    .admin-pill { margin: 1rem 1rem 0.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 0.9rem; display: flex; align-items: center; gap: 10px; }
+    .admin-avatar { width: 34px; height: 34px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 50%; display: grid; place-items: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem; color: #0b0b0a; flex-shrink: 0; }
+    .admin-name { font-weight: 600; font-size: 0.82rem; }
+    .admin-role { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+    .nav-section { padding: 1rem 0.8rem 0.2rem; }
+    .nav-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted2); padding: 0 0.4rem; margin-bottom: 0.35rem; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 0.55rem 0.75rem; border-radius: 9px; color: var(--muted); text-decoration: none; font-size: 0.855rem; transition: background 0.15s, color 0.15s; margin-bottom: 2px; }
+    .nav-item:hover { background: var(--hover); color: var(--text); }
+    .nav-item.active { background: rgba(245,166,35,0.1); color: var(--accent); }
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; opacity: 0.6; }
+    .nav-item:hover .nav-icon, .nav-item.active .nav-icon { opacity: 1; }
+    .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid var(--border); }
+    .logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0.55rem 0.75rem; border-radius: 9px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.855rem; cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; }
+    .logout-btn:hover { background: rgba(232,67,26,0.08); color: var(--accent2); border-color: rgba(232,67,26,0.3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 58px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.8rem; flex-shrink: 0; }
+    .topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+    .topbar-breadcrumb { font-size: 0.72rem; color: var(--muted); }
+    .topbar-badge { background: rgba(245,166,35,0.12); color: var(--accent); border: 1px solid rgba(245,166,35,0.25); border-radius: 6px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 3px 8px; }
+    .content { flex: 1; overflow-y: auto; padding: 1.8rem; animation: fadeIn 0.35s ease both; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Page header ── */
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .section-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.03em; }
+    .section-title span { color: var(--accent); }
+
+    /* ── Filter bar ── */
+    .filter-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.3rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+    .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fpill { padding: 0.4rem 0.9rem; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.15s; }
+    .fpill:hover { border-color: var(--accent); color: var(--accent); }
+    .fpill.active { background: var(--accent); border-color: var(--accent); color: #0b0b0a; font-weight: 700; }
+
+    .filter-divider { width: 1px; height: 28px; background: var(--border); margin: 0 0.2rem; }
+
+    .custom-range { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .date-input { background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; padding: 0.42rem 0.7rem; outline: none; transition: border-color 0.2s; }
+    .date-input:focus { border-color: var(--accent); }
+    .date-sep { font-size: 0.75rem; color: var(--muted); }
+    .btn-apply { padding: 0.42rem 0.9rem; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #0b0b0a; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.78rem; cursor: pointer; transition: opacity 0.2s; }
+    .btn-apply:hover { opacity: 0.88; }
+
+    /* ── Range label ── */
+    .range-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 1.3rem; }
+    .range-label strong { color: var(--text); }
+
+    /* ── Stats row ── */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    @media (max-width: 700px) { .stats-row { grid-template-columns: 1fr; } }
+
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem 1.4rem; }
+    .stat-label { font-size: 0.72rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+    .stat-value { font-family: 'Syne', sans-serif; font-weight: 900; font-size: 1.8rem; letter-spacing: -0.03em; }
+    .stat-value.revenue { color: var(--accent); }
+    .stat-value.orders  { color: var(--text); }
+    .stat-value.items   { color: var(--success); }
+    .stat-sub { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── Revenue table ── */
+    .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .table-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.3rem; border-bottom: 1px solid var(--border); }
+    .table-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 8px; }
+    .table-icon { width: 26px; height: 26px; background: rgba(245,166,35,0.12); border-radius: 7px; display: grid; place-items: center; font-size: 0.8rem; }
+    .row-count { font-size: 0.7rem; color: var(--muted); background: var(--input-bg); border: 1px solid var(--border); border-radius: 20px; padding: 2px 10px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 0.7rem 1.1rem; text-align: left; border-bottom: 1px solid var(--border); background: var(--input-bg); }
+    thead th:last-child { text-align: right; }
+    tbody td { padding: 0.8rem 1.1rem; border-bottom: 1px solid #1c1b19; font-size: 0.875rem; vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #0f0f0e; }
+
+    .cat-pill { background: rgba(245,166,35,0.08); color: var(--accent); border: 1px solid rgba(245,166,35,0.15); border-radius: 20px; font-size: 0.67rem; font-weight: 600; padding: 2px 8px; }
+    .item-name { font-weight: 500; }
+    .price-text { color: var(--muted); font-size: 0.82rem; }
+    .qty-text { font-family: 'Syne', sans-serif; font-weight: 700; }
+    .total-text { font-family: 'Syne', sans-serif; font-weight: 800; color: var(--accent); text-align: right; }
+
+    /* Table footer total row */
+    .total-row td { border-top: 1px solid var(--border); background: var(--input-bg); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; padding: 0.9rem 1.1rem; border-bottom: none !important; }
+    .total-row .grand { color: var(--accent); font-size: 1.05rem; text-align: right; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+    .empty-icon  { font-size: 2rem; opacity: 0.2; margin-bottom: 0.6rem; }
+
+    .mobile-toggle { display: none; background: transparent; border: none; color: var(--text); font-size: 1.3rem; cursor: pointer; }
+    @media (max-width: 768px) { .sidebar { position: fixed; left: -100%; top:0; bottom:0; z-index:100; transition: left 0.3s; } .sidebar.open { left:0; } .mobile-toggle { display: block; } }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🍽</div>
+      <div class="brand-text">Campus<span>Eats</span></div>
+    </div>
+    <div class="admin-pill">
+      <div class="admin-avatar">{{ request.session.user_name|first|upper }}</div>
+      <div>
+        <div class="admin-name">{{ request.session.user_name }}</div>
+        <div class="admin-role">{{ request.session.role }}</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Overview</div>
+        <a href="{% url 'admin_dashboard' %}" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">User Management</div>
+        <a href="{% url 'manage_staff' %}"    class="nav-item "><span class="nav-icon">👤</span> Staff</a>
+        <a href="{% url 'manage_students' %}" class="nav-item"><span class="nav-icon">🎓</span> Students</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Menu Management</div>
+        <a href="{% url 'manage_category' %}" class="nav-item"><span class="nav-icon">◈</span> Categories</a>
+        <a href="{% url 'manage_items' %}"    class="nav-item"><span class="nav-icon">▤</span> Items</a>
+        <a href="{% url 'prepare_menu' %}"    class="nav-item"><span class="nav-icon">✦</span> Prepare Menu</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Wallet & Finance</div>
+        <a href="{% url 'recharge_wallet' %}"     class="nav-item"><span class="nav-icon">◎</span> Recharge Wallet</a>
+        <a href="{% url 'transaction_history' %}" class="nav-item"><span class="nav-icon">↕</span> Transaction History</a>
+        <a href="{% url 'revenue' %}"             class="nav-item active"><span class="nav-icon">◉</span> Revenue</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Orders</div>
+        <a href="{% url 'order_history' %}" class="nav-item"><span class="nav-icon">≡</span> Order History</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="{% url 'logout' %}" class="logout-btn"><span>⇤</span> Logout</a>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:0.8rem;">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <div class="topbar-title">Revenue</div>
+          <div class="topbar-breadcrumb">Admin &rsaquo; Wallet &amp; Finance &rsaquo; Revenue</div>
+        </div>
+      </div>
+      <span class="topbar-badge">{{ request.session.role }}</span>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <div class="section-title">Revenue <span>Report</span></div>
+      </div>
+
+      <!-- ── Filter bar ── -->
+      <div class="filter-card">
+        <div class="filter-pills">
+          <a href="?filter=today" class="fpill {% if filter_type == 'today' %}active{% endif %}">Today</a>
+          <a href="?filter=week"  class="fpill {% if filter_type == 'week'  %}active{% endif %}">This Week</a>
+          <a href="?filter=month" class="fpill {% if filter_type == 'month' %}active{% endif %}">This Month</a>
+        </div>
+        <div class="filter-divider"></div>
+        <form method="GET" action="{% url 'revenue' %}" class="custom-range">
+          <input type="hidden" name="filter" value="custom"/>
+          <input type="date" name="date_from" class="date-input"
+                 value="{% if filter_type == 'custom' %}{{ date_from|date:'Y-m-d' }}{% endif %}"/>
+          <span class="date-sep">→</span>
+          <input type="date" name="date_to" class="date-input"
+                 value="{% if filter_type == 'custom' %}{{ date_to|date:'Y-m-d' }}{% endif %}"/>
+          <button type="submit" class="btn-apply">Apply</button>
+        </form>
+      </div>
+
+      <!-- Range label -->
+      <div class="range-label">
+        Showing data from
+        <strong>{{ date_from|date:"d M Y" }}</strong>
+        {% if date_from != date_to %}
+          to <strong>{{ date_to|date:"d M Y" }}</strong>
+        {% endif %}
+      </div>
+
+      <!-- ── Stats row ── -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value revenue">₹{{ total_revenue|floatformat:2 }}</div>
+          <div class="stat-sub">From {{ total_orders }} order{{ total_orders|pluralize }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-value orders">{{ total_orders }}</div>
+          <div class="stat-sub">Excluding cancelled</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Items Sold</div>
+          <div class="stat-value items">{{ total_items_sold }}</div>
+          <div class="stat-sub">Across all orders</div>
+        </div>
+      </div>
+
+      <!-- ── Revenue breakdown table ── -->
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">
+            <div class="table-icon">◉</div>
+            Item-wise Breakdown
+          </div>
+          <span class="row-count">{{ item_summary|length }} item{{ item_summary|length|pluralize }}</span>
+        </div>
+
+        {% if item_summary %}
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Unit Price</th>
+                  <th>Qty Sold</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in item_summary %}
+                  <tr>
+                    <td><span class="item-name">{{ row.item__name }}</span></td>
+                    <td><span class="cat-pill">{{ row.item__category__name }}</span></td>
+                    <td><span class="price-text">₹{{ row.price|floatformat:2 }}</span></td>
+                    <td><span class="qty-text">{{ row.total_quantity }}</span></td>
+                    <td><span class="total-text">₹{{ row.total_amount|floatformat:2 }}</span></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td colspan="3">Grand Total</td>
+                  <td><span class="qty-text">{{ total_items_sold }}</span></td>
+                  <td class="grand">₹{{ total_revenue|floatformat:2 }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-icon">◉</div>
+            No revenue data for the selected period.
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

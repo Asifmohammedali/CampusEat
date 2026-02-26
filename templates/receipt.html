@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Receipt — Order #{{ order.id }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
+    /* ── Screen view ── */
+    body {
+      background: #1a1815;
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .receipt-wrapper {
+      background: #fff;
+      width: 100%;
+      max-width: 360px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+
+    /* Header */
+    .receipt-header {
+      background: #1a1815;
+      color: #fff;
+      padding: 1.6rem 1.4rem 1.2rem;
+      text-align: center;
+    }
+    .receipt-logo { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:0.5rem; }
+    .logo-mark { width:32px; height:32px; background:linear-gradient(135deg,#f5a623,#e8431a); border-radius:8px; display:grid; place-items:center; font-size:1rem; }
+    .logo-text { font-family:'Syne',sans-serif; font-weight:800; font-size:1.1rem; letter-spacing:-0.02em; }
+    .logo-text span { color:#f5a623; }
+    .receipt-subtitle { font-size:0.72rem; color:rgba(255,255,255,0.45); letter-spacing:0.08em; text-transform:uppercase; margin-top:2px; }
+
+    /* Status stamp */
+    .status-stamp {
+      margin: 1rem 1.4rem 0;
+      background: rgba(76,175,125,0.12);
+      border: 1px solid rgba(76,175,125,0.3);
+      border-radius: 8px;
+      padding: 0.5rem 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #4caf7d;
+    }
+    .status-dot { width:7px; height:7px; background:#4caf7d; border-radius:50%; }
+
+    /* Divider */
+    .dashed { border: none; border-top: 1.5px dashed #e0dbd2; margin: 1.1rem 1.4rem; }
+
+    /* Meta section */
+    .meta { padding: 0 1.4rem; display:flex; flex-direction:column; gap:5px; }
+    .meta-row { display:flex; justify-content:space-between; font-size:0.78rem; }
+    .meta-row .lbl { color:#888; }
+    .meta-row .val { font-weight:500; color:#1a1815; text-align:right; max-width:55%; }
+    .meta-row .val.mono { font-family:'Syne',sans-serif; font-weight:700; }
+
+    /* Items */
+    .items-section { padding: 0 1.4rem; }
+    .items-head { display:flex; justify-content:space-between; font-size:0.65rem; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.5rem; }
+    .item-row { display:flex; align-items:flex-start; gap:8px; padding:0.45rem 0; border-bottom:1px solid #f0ece4; }
+    .item-row:last-child { border-bottom:none; }
+    .item-qty { width:24px; height:24px; background:#f5f3ef; border-radius:6px; display:grid; place-items:center; font-family:'Syne',sans-serif; font-weight:700; font-size:0.72rem; color:#1a1815; flex-shrink:0; margin-top:1px; }
+    .item-info { flex:1; }
+    .item-name { font-size:0.83rem; font-weight:500; color:#1a1815; }
+    .item-cat  { font-size:0.68rem; color:#aaa; margin-top:1px; }
+    .item-subtotal { font-family:'Syne',sans-serif; font-weight:700; font-size:0.83rem; color:#1a1815; flex-shrink:0; }
+
+    /* Total */
+    .total-section { margin: 0.8rem 1.4rem 0; background:#f5f3ef; border-radius:10px; padding:0.75rem 1rem; }
+    .total-row-inner { display:flex; justify-content:space-between; align-items:center; }
+    .total-lbl { font-size:0.78rem; color:#888; }
+    .total-val { font-family:'Syne',sans-serif; font-weight:900; font-size:1.3rem; color:#1a1815; }
+
+    /* Footer */
+    .receipt-footer { padding:1.2rem 1.4rem 1.4rem; text-align:center; }
+    .footer-msg { font-size:0.75rem; color:#aaa; line-height:1.5; }
+    .footer-msg strong { color:#1a1815; }
+
+    /* Barcode-style decorative strip */
+    .barcode-strip { height:10px; background:repeating-linear-gradient(90deg,#1a1815 0px,#1a1815 2px,#fff 2px,#fff 4px); margin:0 1.4rem; border-radius:2px; opacity:0.08; margin-bottom:0.8rem; }
+
+    /* Print button — screen only */
+    .print-bar {
+      display:flex; gap:8px; justify-content:center;
+      padding:1.2rem 1.4rem;
+      border-top:1px solid #f0ece4;
+      background:#faf8f4;
+    }
+    .btn-print { flex:1; padding:0.7rem; border:none; border-radius:10px; background:#1a1815; color:#fff; font-family:'Syne',sans-serif; font-weight:700; font-size:0.875rem; cursor:pointer; transition:opacity 0.2s; }
+    .btn-print:hover { opacity:0.85; }
+    .btn-close { padding:0.7rem 1.1rem; border-radius:10px; border:1px solid #e0dbd2; background:transparent; color:#888; font-family:'DM Sans',sans-serif; font-size:0.875rem; cursor:pointer; }
+    .btn-close:hover { background:#f0ece4; }
+
+    /* ── Print styles ── */
+    @media print {
+      body { background:#fff; padding:0; display:block; }
+      .receipt-wrapper { box-shadow:none; border-radius:0; max-width:100%; }
+      .print-bar { display:none !important; }
+      @page { margin:0; size:80mm auto; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="receipt-wrapper">
+
+  <!-- Header -->
+  <div class="receipt-header">
+    <div class="receipt-logo">
+      <div class="logo-mark">🍽</div>
+      <div class="logo-text">Campus<span>Eats</span></div>
+    </div>
+    <div class="receipt-subtitle">Canteen Receipt</div>
+  </div>
+
+  <div class="status-stamp">
+    <div class="status-dot"></div>
+    Order Confirmed
+  </div>
+
+  <hr class="dashed"/>
+
+  <!-- Meta -->
+  <div class="meta">
+    <div class="meta-row">
+      <span class="lbl">Order ID</span>
+      <span class="val mono">#{{ order.id }}</span>
+    </div>
+    <div class="meta-row">
+      <span class="lbl">Student</span>
+      <span class="val">{{ order.user.name }}</span>
+    </div>
+    <div class="meta-row">
+      <span class="lbl">Admission No.</span>
+      <span class="val mono">{{ order.user.admission_number }}</span>
+    </div>
+    <div class="meta-row">
+      <span class="lbl">Date</span>
+      <span class="val">{{ order.ordered_at|date:"d M Y" }}</span>
+    </div>
+    <div class="meta-row">
+      <span class="lbl">Time</span>
+      <span class="val">{{ order.ordered_at|time:"h:i A" }}</span>
+    </div>
+    {% if order.accepted_by %}
+    <div class="meta-row">
+      <span class="lbl">Served by</span>
+      <span class="val">{{ order.accepted_by.name }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <hr class="dashed"/>
+
+  <!-- Items -->
+  <div class="items-section">
+    <div class="items-head">
+      <span>Item</span><span>Amount</span>
+    </div>
+    {% for ci in cart_items %}
+    <div class="item-row">
+      <div class="item-qty">{{ ci.quantity }}</div>
+      <div class="item-info">
+        <div class="item-name">{{ ci.item.name }}</div>
+        <div class="item-cat">{{ ci.item.category.name }} &nbsp;·&nbsp; ₹{{ ci.price|floatformat:2 }} each</div>
+      </div>
+      <div class="item-subtotal">₹{{ ci.subtotal|floatformat:2 }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Total -->
+  <div class="total-section">
+    <div class="total-row-inner">
+      <span class="total-lbl">Grand Total (Paid via Wallet)</span>
+      <span class="total-val">₹{{ order.total_amount|floatformat:2 }}</span>
+    </div>
+  </div>
+
+  <hr class="dashed"/>
+  <div class="barcode-strip"></div>
+
+  <!-- Footer -->
+  <div class="receipt-footer">
+    <div class="footer-msg">
+      Thank you, <strong>{{ order.user.name|truncatewords:1 }}</strong>!<br/>
+      Enjoy your meal 😊<br/>
+      <span style="font-size:0.68rem;opacity:0.6;margin-top:4px;display:block;">This is a digital receipt. No signature required.</span>
+    </div>
+  </div>
+
+  <!-- Print / Close buttons (hidden on print) -->
+  <div class="print-bar">
+    <button class="btn-close" onclick="window.close()">✕ Close</button>
+    <button class="btn-print" onclick="window.print()">🖨 Print Receipt</button>
+  </div>
+
+</div>
+
+<script>
+  // Auto-trigger print on load (optional — remove if you want manual print only)
+  // window.onload = () => window.print();
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<div class="detail-meta">
+  <div class="detail-student">
+    <div class="ds-avatar">{{ order.user.name|first|upper }}</div>
+    <div>
+      <div class="ds-name">{{ order.user.name }}</div>
+      <div class="ds-adm">{{ order.user.admission_number }} &nbsp;·&nbsp; {{ order.ordered_at|date:"d M Y, h:i A" }}</div>
+    </div>
+  </div>
+  <span class="status-pill {{ order.status }}">{{ order.get_status_display }}</span>
+</div>
+<table class="detail-tbl">
+  <thead>
+    <tr><th>Item</th><th>Category</th><th>Price</th><th>Qty</th><th>Subtotal</th></tr>
+  </thead>
+  <tbody>
+    {% for ci in cart_items %}
+    <tr>
+      <td class="item-name-cell">
+        {% if ci.item.image %}<img src="{{ ci.item.image.url }}" class="dt-thumb"/>{% else %}<span class="dt-thumb-ph">🍽</span>{% endif %}
+        {{ ci.item.name }}
+      </td>
+      <td><span class="cat-tag">{{ ci.item.category.name }}</span></td>
+      <td class="muted-cell">₹{{ ci.price|floatformat:2 }}</td>
+      <td class="qty-cell">{{ ci.quantity }}</td>
+      <td class="subtotal-cell">₹{{ ci.subtotal|floatformat:2 }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="total-row">
+      <td colspan="4">Total</td>
+      <td class="grand-cell">₹{{ order.total_amount|floatformat:2 }}</td>
+    </tr>
+  </tfoot>
+</table>
+{% if order.rejected_reason %}
+  <div class="reject-note">✕ Rejected: {{ order.rejected_reason }}</div>
+{% endif %}

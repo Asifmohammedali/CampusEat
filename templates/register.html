@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up — CampusEats</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:       #0f0e0c;
+      --card:     #1a1916;
+      --border:   #2e2c28;
+      --accent:   #f5a623;
+      --accent2:  #e8431a;
+      --text:     #f0ece4;
+      --muted:    #7a776e;
+      --input-bg: #232119;
+      --error:    #ff5c5c;
+      --success:  #4caf7d;
+    }
+    body {
+      min-height:100vh; background:var(--bg); font-family:'DM Sans',sans-serif;
+      display:flex; align-items:center; justify-content:center;
+      padding:1.5rem; overflow-x:hidden;
+    }
+    body::before { content:''; position:fixed; width:600px; height:600px; background:radial-gradient(circle,rgba(245,166,35,0.07) 0%,transparent 70%); top:-150px; left:-150px; pointer-events:none; }
+    body::after  { content:''; position:fixed; width:500px; height:500px; background:radial-gradient(circle,rgba(232,67,26,0.06) 0%,transparent 70%); bottom:-100px; right:-100px; pointer-events:none; }
+
+    .card {
+      width:100%; max-width:440px;
+      background:var(--card); border:1px solid var(--border);
+      border-radius:20px; padding:2.2rem 2rem;
+      animation:fadeUp 0.45s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(24px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+    /* Brand */
+    .brand { display:flex; align-items:center; gap:10px; margin-bottom:1.8rem; }
+    .brand-icon { width:38px; height:38px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:10px; display:grid; place-items:center; font-size:1.1rem; flex-shrink:0; }
+    .brand-text { font-family:'Syne',sans-serif; font-weight:800; font-size:1.1rem; color:var(--text); letter-spacing:-0.02em; }
+    .brand-text span { color:var(--accent); }
+
+    /* Heading */
+    .heading { font-family:'Syne',sans-serif; font-weight:800; font-size:1.5rem; letter-spacing:-0.03em; color:var(--text); margin-bottom:0.3rem; }
+    .subheading { font-size:0.82rem; color:var(--muted); margin-bottom:1.6rem; }
+
+    /* Student badge */
+    .role-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(76,175,125,0.1); border:1px solid rgba(76,175,125,0.25);
+      border-radius:20px; padding:4px 12px; font-size:0.72rem; font-weight:600;
+      color:#4caf7d; margin-bottom:1.4rem;
+    }
+    .role-dot { width:7px; height:7px; background:#4caf7d; border-radius:50%; }
+
+    /* Alerts */
+    .alert { border-radius:10px; padding:0.65rem 0.9rem; font-size:0.81rem; margin-bottom:1.1rem; }
+    .alert-error   { background:rgba(255,92,92,0.1); border:1px solid rgba(255,92,92,0.3); color:var(--error); }
+    .alert-success { background:rgba(76,175,125,0.1); border:1px solid rgba(76,175,125,0.3); color:var(--success); }
+
+    /* Form */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+    @media(max-width:400px){ .two-col{grid-template-columns:1fr;} }
+
+    .form-group { margin-bottom:0.9rem; }
+    label { display:block; font-size:0.72rem; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:0.38rem; }
+    input { width:100%; background:var(--input-bg); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.9rem; padding:0.72rem 0.9rem; outline:none; transition:border-color 0.2s, box-shadow 0.2s; }
+    input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(245,166,35,0.08); }
+    input::placeholder { color:#3a3835; }
+
+    /* Password strength */
+    .pass-strength { height:3px; border-radius:3px; margin-top:6px; background:var(--border); overflow:hidden; }
+    .pass-strength-bar { height:100%; border-radius:3px; width:0%; transition:width 0.3s, background 0.3s; }
+
+    /* Password match indicator */
+    .match-hint { font-size:0.7rem; margin-top:4px; height:14px; }
+    .match-hint.ok  { color:var(--success); }
+    .match-hint.err { color:var(--error); }
+
+    /* Submit */
+    .btn-signup { width:100%; padding:0.82rem; border:none; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0f0e0c; font-family:'Syne',sans-serif; font-weight:800; font-size:0.95rem; cursor:pointer; margin-top:0.6rem; transition:opacity 0.2s, transform 0.15s; letter-spacing:-0.01em; }
+    .btn-signup:hover  { opacity:0.9; }
+    .btn-signup:active { transform:scale(0.98); }
+
+    /* Footer */
+    .footer-note { text-align:center; font-size:0.8rem; color:var(--muted); margin-top:1.4rem; }
+    .footer-note a { color:var(--accent); text-decoration:none; font-weight:600; }
+    .footer-note a:hover { text-decoration:underline; }
+
+    .divider { display:flex; align-items:center; gap:0.8rem; margin:1.2rem 0; }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--border); }
+    .divider span { font-size:0.72rem; color:var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Brand -->
+  <div class="brand">
+    <div class="brand-icon">🍽</div>
+    <div class="brand-text">Campus<span>Eats</span></div>
+  </div>
+
+  <div class="heading">Create Account</div>
+  <div class="subheading">Join CampusEats and start ordering.</div>
+
+  <!-- Role badge -->
+  <div class="role-badge">
+    <div class="role-dot"></div>
+    Student Account
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert {% if m.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Form -->
+  <form method="POST" action="{% url 'register' %}">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" name="name" placeholder="e.g. Arjun Menon" value="{{ form_data.name|default:'' }}" required autofocus/>
+    </div>
+
+    <div class="two-col">
+      <div class="form-group">
+        <label>Admission No.</label>
+        <input type="text" name="admission_number" placeholder="e.g. ADM2024001" value="{{ form_data.admission_number|default:'' }}" required/>
+      </div>
+      <div class="form-group">
+        <label>Phone <span style="color:var(--muted);font-size:0.65rem;">(optional)</span></label>
+        <input type="tel" name="phone" placeholder="+91 XXXXX XXXXX" value="{{ form_data.phone|default:'' }}"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" placeholder="you@college.edu" value="{{ form_data.email|default:'' }}" required/>
+    </div>
+
+    <div class="two-col">
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" id="password" placeholder="Min. 6 chars" required oninput="checkStrength(this.value); checkMatch();"/>
+        <div class="pass-strength"><div class="pass-strength-bar" id="strengthBar"></div></div>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" name="confirm_password" id="confirm_password" placeholder="Repeat password" required oninput="checkMatch()"/>
+        <div class="match-hint" id="matchHint"></div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-signup">Create Account →</button>
+  </form>
+
+  <div class="divider"><span>or</span></div>
+
+  <div class="footer-note">
+    Already have an account? <a href="{% url 'login' %}">Sign in →</a>
+  </div>
+
+</div>
+
+<script>
+  function checkStrength(val) {
+    const bar = document.getElementById('strengthBar');
+    let strength = 0;
+    if (val.length >= 6)  strength++;
+    if (val.length >= 10) strength++;
+    if (/[A-Z]/.test(val)) strength++;
+    if (/[0-9]/.test(val)) strength++;
+    if (/[^A-Za-z0-9]/.test(val)) strength++;
+    const colors = ['#ff5c5c','#f5a623','#f5a623','#4caf7d','#4caf7d'];
+    const widths  = ['20%','40%','60%','80%','100%'];
+    bar.style.width      = val.length ? widths[Math.min(strength-1,4)] : '0%';
+    bar.style.background = val.length ? colors[Math.min(strength-1,4)] : 'transparent';
+  }
+
+  function checkMatch() {
+    const p1   = document.getElementById('password').value;
+    const p2   = document.getElementById('confirm_password').value;
+    const hint = document.getElementById('matchHint');
+    if (!p2) { hint.textContent = ''; return; }
+    if (p1 === p2) { hint.textContent = '✓ Passwords match'; hint.className = 'match-hint ok'; }
+    else           { hint.textContent = '✕ Does not match';  hint.className = 'match-hint err'; }
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard — CampusEats</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0b0b0a;
+      --sidebar:    #111110;
+      --card:       #181816;
+      --border:     #272522;
+      --accent:     #f5a623;
+      --accent2:    #e8431a;
+      --text:       #ede9e0;
+      --muted:      #6b6860;
+      --muted2:     #3a3835;
+      --hover:      #1e1d1b;
+      --success:    #4caf7d;
+      --error:      #ff5c5c;
+      --sidebar-w:  260px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+    }
+
+    /* ── Layout ──────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 1.4rem 1.2rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 9px;
+      display: grid; place-items: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .brand-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-text span { color: var(--accent); }
+
+    /* Admin profile pill */
+    .admin-pill {
+      margin: 1rem 1rem 0.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.75rem 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-avatar {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: #0b0b0a;
+      flex-shrink: 0;
+    }
+    .admin-info { overflow: hidden; }
+    .admin-name {
+      font-weight: 600;
+      font-size: 0.82rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .admin-role {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+    }
+
+    /* Nav sections */
+    .nav-section {
+      padding: 1rem 0.8rem 0.2rem;
+    }
+    .nav-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      padding: 0 0.4rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.55rem 0.75rem;
+      border-radius: 9px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.855rem;
+      font-weight: 400;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 2px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover {
+      background: var(--hover);
+      color: var(--text);
+    }
+    .nav-item.active {
+      background: rgba(146, 100, 26, 0.1);
+      color: var(--accent);
+    }
+    .nav-item.active .nav-icon { opacity: 1; }
+    .nav-icon {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+    .nav-item:hover .nav-icon,
+    .nav-item.active .nav-icon { opacity: 1; }
+
+    /* Sidebar footer */
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border-radius: 9px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.855rem;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      text-decoration: none;
+    }
+    .logout-btn:hover {
+      background: rgba(232,67,26,0.08);
+      color: var(--accent2);
+      border-color: rgba(232,67,26,0.3);
+    }
+
+    /* ── Main content ────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Topbar */
+    .topbar {
+      height: 58px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.8rem;
+      flex-shrink: 0;
+      background: var(--bg);
+    }
+    .topbar-left {
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .topbar-breadcrumb {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .topbar-email {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .topbar-badge {
+      background: rgba(245,166,35,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(245,166,35,0.25);
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+    }
+
+    /* Content area */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem 1.8rem;
+      animation: fadeIn 0.4s ease both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Placeholder */
+    .blank-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 400px;
+      gap: 1rem;
+      color: var(--muted);
+    }
+    .blank-icon {
+      font-size: 3rem;
+      opacity: 0.3;
+    }
+    .blank-text {
+      font-size: 0.875rem;
+      opacity: 0.5;
+    }
+
+    /* Mobile toggle */
+    .mobile-toggle {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0; bottom: 0;
+        z-index: 100;
+        transition: left 0.3s ease;
+      }
+      .sidebar.open { left: 0; }
+      .mobile-toggle { display: block; }
+      .topbar-email { display: none; }
+    }
+
+    /* ── Filter bar ── */
+    .dash-filter { display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .filter-pills { display:flex; gap:5px; }
+    .fpill { padding:0.38rem 0.9rem; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:500; cursor:pointer; text-decoration:none; transition:all 0.15s; white-space:nowrap; }
+    .fpill:hover { border-color:var(--accent); color:var(--accent); }
+    .fpill.active { background:var(--accent); border-color:var(--accent); color:#0b0b0a; font-weight:700; }
+    .custom-range { display:flex; align-items:center; gap:5px; }
+    .date-inp { background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.78rem; padding:0.38rem 0.65rem; outline:none; }
+    .date-inp:focus { border-color:var(--accent); }
+    .dsep { font-size:0.72rem; color:var(--muted); }
+    .btn-apply { padding:0.38rem 0.85rem; border-radius:8px; border:none; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0b0b0a; font-family:'Syne',sans-serif; font-weight:700; font-size:0.77rem; cursor:pointer; }
+    .range-tag { font-size:0.72rem; color:var(--muted); background:var(--card); border:1px solid var(--border); border-radius:8px; padding:0.38rem 0.75rem; }
+
+    /* ── KPI cards ── */
+    .kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; margin-bottom:1.4rem; }
+    @media(max-width:1100px){ .kpi-grid{grid-template-columns:repeat(3,1fr);} }
+    @media(max-width:700px) { .kpi-grid{grid-template-columns:1fr 1fr;} }
+
+    .kpi-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.1rem 1.2rem; transition:border-color 0.15s; position:relative; overflow:hidden; }
+    .kpi-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--border); }
+    .kpi-card.accent::after { background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+    .kpi-card:hover { border-color:var(--muted2); }
+    .kpi-icon { font-size:1.1rem; margin-bottom:0.6rem; opacity:0.5; }
+    .kpi-value { font-family:'Syne',sans-serif; font-weight:900; font-size:1.55rem; letter-spacing:-0.03em; line-height:1; }
+    .kpi-card.accent .kpi-value { color:var(--accent); }
+    .kpi-label { font-size:0.72rem; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-top:0.4rem; }
+    .kpi-sub { font-size:0.68rem; color:var(--muted2); margin-top:0.25rem; }
+
+    /* ── Analytics grid ── */
+    .analytics-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.4rem; }
+    .analytics-grid .span2 { grid-column:span 2; }
+    @media(max-width:1000px){ .analytics-grid{grid-template-columns:1fr 1fr;} .analytics-grid .span2{grid-column:span 2;} }
+    @media(max-width:650px) { .analytics-grid{grid-template-columns:1fr;} .analytics-grid .span2{grid-column:span 1;} }
+
+    .a-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.2rem; }
+    .a-card-title { font-family:'Syne',sans-serif; font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:8px; margin-bottom:1.1rem; }
+    .a-icon { width:24px; height:24px; background:rgba(245,166,35,0.12); border-radius:6px; display:grid; place-items:center; font-size:0.75rem; flex-shrink:0; }
+
+    /* Bar chart */
+    .bar-chart { display:flex; align-items:flex-end; gap:6px; height:80px; padding:0 4px; }
+    .bar-col { flex:1; background:rgba(245,166,35,0.15); border-radius:4px 4px 0 0; transition:background 0.2s; position:relative; cursor:default; min-height:4px; }
+    .bar-col:hover { background:rgba(245,166,35,0.4); }
+    .bar-col .bar-tip { display:none; position:absolute; bottom:calc(100% + 4px); left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); font-size:0.65rem; font-weight:700; padding:2px 6px; border-radius:5px; white-space:nowrap; }
+    .bar-col:hover .bar-tip { display:block; }
+    .bar-labels { display:flex; gap:6px; padding:0 4px; margin-top:4px; }
+    .bar-lbl { flex:1; text-align:center; font-size:0.62rem; color:var(--muted); }
+
+    /* Donut */
+    .donut-legend { display:flex; flex-direction:column; gap:5px; margin-top:0.8rem; }
+    .legend-row { display:flex; align-items:center; gap:7px; font-size:0.76rem; }
+    .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+
+    /* Rank list */
+    .rank-list { display:flex; flex-direction:column; gap:8px; }
+    .rank-row { display:flex; align-items:center; gap:10px; }
+    .rank-num { width:20px; height:20px; border-radius:6px; background:var(--muted2); display:grid; place-items:center; font-family:'Syne',sans-serif; font-weight:800; font-size:0.68rem; color:var(--muted); flex-shrink:0; }
+    .rank-row:first-child .rank-num { background:rgba(245,166,35,0.2); color:var(--accent); }
+    .rank-info { flex:1; min-width:0; }
+    .rank-name { font-weight:500; font-size:0.845rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rank-cat  { font-size:0.68rem; color:var(--muted); }
+    .rank-right { text-align:right; flex-shrink:0; }
+    .rank-val { font-family:'Syne',sans-serif; font-weight:700; font-size:0.82rem; }
+    .rank-val.accent-text { color:var(--accent); }
+    .rank-sub { font-size:0.68rem; color:var(--muted); }
+    .rank-bar-wrap { height:3px; background:var(--border); border-radius:3px; margin-top:3px; width:80px; }
+    .rank-bar { height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:3px; }
+
+    /* Combo list */
+    .combo-list { display:flex; flex-direction:column; gap:8px; }
+    .combo-row { display:flex; align-items:center; justify-content:space-between; background:var(--hover); border-radius:9px; padding:0.6rem 0.8rem; gap:8px; }
+    .combo-items { display:flex; align-items:center; gap:5px; flex:1; min-width:0; flex-wrap:wrap; }
+    .combo-item { font-size:0.78rem; font-weight:500; color:var(--text); }
+    .combo-plus { font-size:0.7rem; color:var(--muted); font-weight:700; }
+    .combo-count { font-family:'Syne',sans-serif; font-weight:800; font-size:0.82rem; color:var(--accent); flex-shrink:0; }
+
+    .no-data { text-align:center; color:var(--muted); font-size:0.82rem; padding:1.5rem 0; opacity:0.6; }
+
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+    <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🍽</div>
+      <div class="brand-text">Campus<span>Eats</span></div>
+    </div>
+    <div class="admin-pill">
+      <div class="admin-avatar">{{ request.session.user_name|first|upper }}</div>
+      <div>
+        <div class="admin-name">{{ request.session.user_name }}</div>
+        <div class="admin-role">{{ request.session.role }}</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Overview</div>
+        <a href="{% url 'admin_dashboard' %}" class="nav-item active"><span class="nav-icon">⊞</span> Dashboard</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">User Management</div>
+        <a href="{% url 'manage_staff' %}"    class="nav-item"><span class="nav-icon">👤</span> Staff</a>
+        <a href="{% url 'manage_students' %}" class="nav-item "><span class="nav-icon">🎓</span> Students</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Menu Management</div>
+        <a href="{% url 'manage_category' %}" class="nav-item"><span class="nav-icon">◈</span> Categories</a>
+        <a href="{% url 'manage_items' %}"    class="nav-item"><span class="nav-icon">▤</span> Items</a>
+        <a href="{% url 'prepare_menu' %}"    class="nav-item"><span class="nav-icon">✦</span> Prepare Menu</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Wallet & Finance</div>
+        <a href="{% url 'recharge_wallet' %}"     class="nav-item"><span class="nav-icon">◎</span> Recharge Wallet</a>
+        <a href="{% url 'transaction_history' %}" class="nav-item"><span class="nav-icon">↕</span> Transaction History</a>
+        <a href="{% url 'revenue' %}"             class="nav-item"><span class="nav-icon">◉</span> Revenue</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Orders</div>
+        <a href="{% url 'order_history' %}" class="nav-item"><span class="nav-icon">≡</span> Order History</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="{% url 'logout' %}" class="logout-btn"><span>⇤</span> Logout</a>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:0.8rem;">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div class="topbar-left">
+          <div class="topbar-title">Admin Dashboard</div>
+          <div class="topbar-breadcrumb">CampusEats &rsaquo; Admin</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-email">{{ request.session.user_email }}</span>
+        <span class="topbar-badge">{{ request.session.role }}</span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- ── Filter bar ── -->
+      <div class="dash-filter">
+        <div class="filter-pills">
+          <a href="?filter=today" class="fpill {% if filter_type == 'today' %}active{% endif %}">Today</a>
+          <a href="?filter=week"  class="fpill {% if filter_type == 'week'  %}active{% endif %}">This Week</a>
+          <a href="?filter=month" class="fpill {% if filter_type == 'month' %}active{% endif %}">This Month</a>
+        </div>
+        <form method="GET" action="{% url 'admin_dashboard' %}" class="custom-range">
+          <input type="hidden" name="filter" value="custom"/>
+          <input type="date" name="date_from" class="date-inp"
+                 value="{% if filter_type == 'custom' %}{{ date_from|date:'Y-m-d' }}{% endif %}"/>
+          <span class="dsep">→</span>
+          <input type="date" name="date_to" class="date-inp"
+                 value="{% if filter_type == 'custom' %}{{ date_to|date:'Y-m-d' }}{% endif %}"/>
+          <button type="submit" class="btn-apply">Apply</button>
+        </form>
+        <div class="range-tag">
+          {{ date_from|date:"d M" }}{% if date_from != date_to %} — {{ date_to|date:"d M Y" }}{% else %}, {{ date_from|date:"Y" }}{% endif %}
+        </div>
+      </div>
+
+      <!-- ── KPI cards ── -->
+      <div class="kpi-grid">
+
+        <div class="kpi-card accent">
+          <div class="kpi-icon">₹</div>
+          <div class="kpi-value">₹{{ total_revenue|floatformat:0 }}</div>
+          <div class="kpi-label">Total Revenue</div>
+          <div class="kpi-sub">{{ total_orders }} order{{ total_orders|pluralize }}</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon">≡</div>
+          <div class="kpi-value">{{ total_orders }}</div>
+          <div class="kpi-label">Orders Placed</div>
+          <div class="kpi-sub">Excl. cancelled</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon">🎓</div>
+          <div class="kpi-value">{{ total_students }}</div>
+          <div class="kpi-label">Total Students</div>
+          <div class="kpi-sub">Registered</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon">👤</div>
+          <div class="kpi-value">{{ total_staff }}</div>
+          <div class="kpi-label">Staff Members</div>
+          <div class="kpi-sub">Active accounts</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon">✦</div>
+          <div class="kpi-value">{{ todays_menu_count }}</div>
+          <div class="kpi-label">Today's Menu</div>
+          <div class="kpi-sub">Items available</div>
+        </div>
+
+      </div>
+
+      <!-- ── Charts + tables row ── -->
+      <div class="analytics-grid">
+
+        <!-- Revenue trend (7-day bar chart) -->
+        <div class="a-card span2">
+          <div class="a-card-title"><div class="a-icon">▦</div> 7-Day Revenue Trend</div>
+          <div class="bar-chart" id="barChart"></div>
+          <div class="bar-labels" id="barLabels"></div>
+        </div>
+
+        <!-- Order status donut -->
+        <div class="a-card">
+          <div class="a-card-title"><div class="a-icon">◉</div> Order Status</div>
+          <canvas id="donutChart" width="180" height="180" style="display:block;margin:0.5rem auto 0;"></canvas>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+
+      </div>
+
+      <!-- ── Bottom analytics row ── -->
+      <div class="analytics-grid">
+
+        <!-- Top products by qty -->
+        <div class="a-card">
+          <div class="a-card-title"><div class="a-icon">⊕</div> Most Ordered Items</div>
+          {% if top_products %}
+            <div class="rank-list">
+              {% for p in top_products %}
+                <div class="rank-row">
+                  <span class="rank-num">{{ forloop.counter }}</span>
+                  <div class="rank-info">
+                    <div class="rank-name">{{ p.item__name }}</div>
+                    <div class="rank-cat">{{ p.item__category__name }}</div>
+                  </div>
+                  <div class="rank-right">
+                    <div class="rank-val">{{ p.total_qty }} sold</div>
+                    <div class="rank-bar-wrap"><div class="rank-bar" style="width:{{ p.total_qty|floatformat:0 }}px;max-width:80px;"></div></div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="no-data">No orders in this period.</div>
+          {% endif %}
+        </div>
+
+        <!-- Top revenue products -->
+        <div class="a-card">
+          <div class="a-card-title"><div class="a-icon">◉</div> Top Revenue Items</div>
+          {% if top_revenue_products %}
+            <div class="rank-list">
+              {% for p in top_revenue_products %}
+                <div class="rank-row">
+                  <span class="rank-num">{{ forloop.counter }}</span>
+                  <div class="rank-info">
+                    <div class="rank-name">{{ p.item__name }}</div>
+                    <div class="rank-cat">{{ p.item__category__name }}</div>
+                  </div>
+                  <div class="rank-right">
+                    <div class="rank-val accent-text">₹{{ p.total_rev|floatformat:0 }}</div>
+                    <div class="rank-sub">{{ p.total_qty }} sold</div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="no-data">No revenue data in this period.</div>
+          {% endif %}
+        </div>
+
+        <!-- Top combos -->
+        <div class="a-card">
+          <div class="a-card-title"><div class="a-icon">⊞</div> Popular Combos</div>
+          {% if top_combos %}
+            <div class="combo-list">
+              {% for combo in top_combos %}
+                <div class="combo-row">
+                  <div class="combo-items">
+                    <span class="combo-item">{{ combo.2 }}</span>
+                    <span class="combo-plus">+</span>
+                    <span class="combo-item">{{ combo.3 }}</span>
+                  </div>
+                  <div class="combo-count">{{ combo.4 }}×</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="no-data">Not enough orders to find combos.</div>
+          {% endif %}
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+// ── Bar chart (7-day trend) ─────────────────────────────────────────────
+const trendData = {{ trend_data|safe }};
+const maxRev    = Math.max(...trendData.map(d => d.revenue), 1);
+const barChart  = document.getElementById('barChart');
+const barLabels = document.getElementById('barLabels');
+
+trendData.forEach(d => {
+  const pct = (d.revenue / maxRev) * 100;
+  const col  = document.createElement('div');
+  col.className = 'bar-col';
+  col.style.height = Math.max(pct, 2) + '%';
+  col.innerHTML = `<div class="bar-tip">₹${d.revenue.toLocaleString('en-IN')}</div>`;
+  barChart.appendChild(col);
+
+  const lbl = document.createElement('div');
+  lbl.className = 'bar-lbl';
+  lbl.textContent = d.day;
+  barLabels.appendChild(lbl);
+});
+
+// ── Donut chart (order status) ──────────────────────────────────────────
+const statusData = {{ status_data|safe }};
+const colors = {
+  PENDING:   '#f5a623',
+  CONFIRMED: '#4caf7d',
+  PREPARING: '#d4521a',
+  READY:     '#7ec8e3',
+  COMPLETED: '#6b6860',
+  CANCELLED: '#ff5c5c',
+};
+const labels = {
+  PENDING:'Pending', CONFIRMED:'Confirmed', PREPARING:'Preparing',
+  READY:'Ready', COMPLETED:'Completed', CANCELLED:'Cancelled'
+};
+
+const canvas = document.getElementById('donutChart');
+const ctx    = canvas.getContext('2d');
+const entries = Object.entries(statusData);
+const total   = entries.reduce((s,[,v]) => s+v, 0);
+
+if (total > 0) {
+  let startAngle = -Math.PI / 2;
+  const cx = 90, cy = 90, r = 70, inner = 46;
+  entries.forEach(([status, count]) => {
+    const slice = (count / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, startAngle + slice);
+    ctx.closePath();
+    ctx.fillStyle = colors[status] || '#3a3835';
+    ctx.fill();
+    startAngle += slice;
+  });
+  // Inner circle (donut hole)
+  ctx.beginPath();
+  ctx.arc(cx, cy, inner, 0, Math.PI * 2);
+  ctx.fillStyle = '#181816';
+  ctx.fill();
+  // Center text
+  ctx.fillStyle = '#ede9e0';
+  ctx.font = 'bold 20px Syne, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(total, cx, cy - 7);
+  ctx.font = '11px DM Sans, sans-serif';
+  ctx.fillStyle = '#6b6860';
+  ctx.fillText('orders', cx, cy + 10);
+} else {
+  ctx.fillStyle = '#272522';
+  ctx.beginPath();
+  ctx.arc(90, 90, 70, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(90, 90, 46, 0, Math.PI * 2);
+  ctx.fillStyle = '#181816';
+  ctx.fill();
+  ctx.fillStyle = '#6b6860';
+  ctx.font = '11px DM Sans, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('No orders', 90, 90);
+}
+
+// Legend
+const legend = document.getElementById('donutLegend');
+entries.forEach(([status, count]) => {
+  const row = document.createElement('div');
+  row.className = 'legend-row';
+  row.innerHTML = `<div class="legend-dot" style="background:${colors[status]||'#3a3835'}"></div>
+    <span style="flex:1;color:#6b6860">${labels[status]||status}</span>
+    <span style="font-family:Syne,sans-serif;font-weight:700;font-size:0.82rem">${count}</span>`;
+  legend.appendChild(row);
+});
+</script>
+
+</body>
+</html>

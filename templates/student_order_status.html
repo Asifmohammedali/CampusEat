@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order Status — CampusEats</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:#faf8f4; --bg2:#f3f0ea; --card:#fff; --border:#e8e3d9;
+      --accent:#d4521a; --accent2:#f5a623; --text:#1a1815; --muted:#8a847a;
+      --muted2:#c5bfb4; --dark:#1a1815; --success:#4caf7d; --error:#ff5c5c;
+    }
+    body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; min-height:100vh; }
+
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:9999; opacity:0.4; }
+
+    /* Header */
+    header { position:sticky; top:0; z-index:100; background:rgba(250,248,244,0.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); padding:0 2rem; height:64px; display:flex; align-items:center; justify-content:space-between; }
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .logo-mark { width:36px; height:36px; background:linear-gradient(135deg,var(--accent2),var(--accent)); border-radius:10px; display:grid; place-items:center; font-size:1.1rem; }
+    .logo-text { font-family:'Syne',sans-serif; font-weight:800; font-size:1.15rem; color:var(--text); letter-spacing:-0.02em; }
+    .logo-text span { color:var(--accent); }
+    .header-nav { display:flex; align-items:center; gap:0.25rem; }
+    .nav-link { padding:0.45rem 0.9rem; border-radius:8px; text-decoration:none; color:var(--muted); font-size:0.83rem; font-weight:500; transition:background 0.15s,color 0.15s; }
+    .nav-link:hover { background:var(--bg2); color:var(--text); }
+    .nav-link.active { background:rgba(212,82,26,0.08); color:var(--accent); font-weight:600; }
+    .header-right { display:flex; align-items:center; gap:0.7rem; }
+    .user-chip { display:flex; align-items:center; gap:8px; background:var(--bg2); border:1px solid var(--border); border-radius:30px; padding:0.28rem 0.9rem 0.28rem 0.28rem; }
+    .user-avatar { width:28px; height:28px; background:linear-gradient(135deg,var(--accent2),var(--accent)); border-radius:50%; display:grid; place-items:center; font-size:0.7rem; font-weight:700; color:#fff; font-family:'Syne',sans-serif; }
+    .user-name { font-size:0.82rem; font-weight:600; }
+    .cart-btn { position:relative; width:38px; height:38px; border-radius:10px; background:var(--dark); border:none; color:#fff; font-size:1rem; display:grid; place-items:center; cursor:pointer; text-decoration:none; }
+    .cart-count { position:absolute; top:-4px; right:-4px; width:17px; height:17px; background:var(--accent); border-radius:50%; font-size:0.6rem; font-weight:700; display:grid; place-items:center; color:#fff; }
+    .btn-logout { padding:0.42rem 0.9rem; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'Plus Jakarta Sans',sans-serif; font-size:0.82rem; cursor:pointer; text-decoration:none; }
+    .btn-logout:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* Page */
+    .content { max-width:760px; margin:0 auto; padding:2rem 1.5rem; }
+    .page-title { font-family:'Syne',sans-serif; font-weight:800; font-size:1.55rem; letter-spacing:-0.03em; margin-bottom:0.3rem; }
+    .page-title span { color:var(--accent); }
+    .page-sub { font-size:0.83rem; color:var(--muted); margin-bottom:2rem; }
+
+    /* Auto-refresh badge */
+    .refresh-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(212,82,26,0.06); border:1px solid rgba(212,82,26,0.15); border-radius:20px; padding:3px 10px; font-size:0.72rem; color:var(--accent); font-weight:600; margin-left:10px; vertical-align:middle; }
+    .refresh-dot { width:6px; height:6px; background:var(--accent); border-radius:50%; animation:blink 1.4s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── Order status card ── */
+    .order-card {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:20px; margin-bottom:1.4rem;
+      overflow:hidden; animation:cardIn 0.45s ease both;
+    }
+    @keyframes cardIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+    .oc-top { padding:1.1rem 1.4rem; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:0.6rem; }
+    .oc-id { font-family:'Syne',sans-serif; font-weight:800; font-size:0.95rem; }
+    .oc-time { font-size:0.74rem; color:var(--muted); }
+    .oc-amount { font-family:'Syne',sans-serif; font-weight:900; font-size:1rem; color:var(--accent); }
+
+    /* Status label pill */
+    .status-label { font-size:0.7rem; font-weight:700; border-radius:20px; padding:3px 11px; text-transform:uppercase; letter-spacing:0.06em; }
+    .s-PENDING   { background:rgba(245,166,35,0.1);  color:#e89a1a; border:1px solid rgba(245,166,35,0.3); }
+    .s-CONFIRMED { background:rgba(76,175,125,0.1);  color:#3a9e6a; border:1px solid rgba(76,175,125,0.3); }
+    .s-PREPARING { background:rgba(212,82,26,0.08);  color:var(--accent); border:1px solid rgba(212,82,26,0.25); }
+    .s-READY     { background:rgba(76,175,125,0.15); color:#2e8a5a; border:1px solid rgba(76,175,125,0.4); }
+    .s-COMPLETED { background:rgba(26,24,21,0.05);   color:var(--muted); border:1px solid var(--border); }
+    .s-CANCELLED { background:rgba(255,92,92,0.08);  color:var(--error);  border:1px solid rgba(255,92,92,0.2); }
+    .s-REJECTED  { background:rgba(255,92,92,0.08);  color:var(--error);  border:1px solid rgba(255,92,92,0.2); }
+
+    /* ── Tracker ── */
+    .tracker { padding:1.6rem 1.4rem 1.4rem; }
+
+    .track-line {
+      display:flex; align-items:flex-start; position:relative;
+    }
+
+    /* horizontal connector between steps */
+    .track-line::before {
+      content:'';
+      position:absolute;
+      top:16px;
+      left:16px;
+      right:16px;
+      height:2px;
+      background:var(--border);
+      z-index:0;
+    }
+
+    .track-step {
+      display:flex; flex-direction:column; align-items:center;
+      flex:1; position:relative; z-index:1;
+    }
+
+    /* Progress fill — done via inline clip-path on a separate el */
+    .track-progress {
+      position:absolute;
+      top:16px; left:16px;
+      height:2px;
+      background:linear-gradient(90deg,var(--accent2),var(--accent));
+      z-index:0;
+      transition:width 0.6s cubic-bezier(.4,0,.2,1);
+    }
+
+    .step-dot {
+      width:32px; height:32px; border-radius:50%;
+      background:var(--bg2); border:2px solid var(--border);
+      display:grid; place-items:center;
+      font-size:0.85rem;
+      transition:background 0.3s, border-color 0.3s, transform 0.3s;
+      position:relative; z-index:2;
+    }
+    .step-dot.done {
+      background:linear-gradient(135deg,var(--accent2),var(--accent));
+      border-color:transparent;
+      transform:scale(1.08);
+    }
+    .step-dot.active {
+      background:#fff;
+      border-color:var(--accent);
+      border-width:2.5px;
+      box-shadow:0 0 0 4px rgba(212,82,26,0.12);
+      animation:pulse-dot 1.6s infinite;
+    }
+    @keyframes pulse-dot { 0%,100%{box-shadow:0 0 0 4px rgba(212,82,26,0.12)} 50%{box-shadow:0 0 0 8px rgba(212,82,26,0.04)} }
+
+    .step-label {
+      margin-top:8px; font-size:0.65rem; font-weight:600;
+      text-align:center; line-height:1.3; color:var(--muted2);
+      max-width:60px; word-break:break-word;
+    }
+    .step-label.done   { color:var(--text); }
+    .step-label.active { color:var(--accent); }
+
+    .step-time {
+      font-size:0.6rem; color:var(--muted); margin-top:3px;
+      text-align:center; min-height:14px;
+    }
+
+    /* Items summary */
+    .oc-items { padding:0 1.4rem 1.2rem; display:flex; gap:6px; flex-wrap:wrap; }
+    .item-tag { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:3px 10px; font-size:0.72rem; color:var(--muted); }
+
+    /* Rejected / Cancelled block */
+    .rejected-block { margin:0 1.4rem 1.2rem; background:rgba(255,92,92,0.05); border:1px solid rgba(255,92,92,0.2); border-radius:12px; padding:0.8rem 1rem; }
+    .rejected-title { font-size:0.78rem; font-weight:600; color:var(--error); margin-bottom:3px; }
+    .rejected-reason { font-size:0.76rem; color:var(--muted); }
+
+    /* Empty */
+    .empty-state { text-align:center; padding:4rem 1rem; }
+    .empty-icon { font-size:3.5rem; opacity:0.2; margin-bottom:1rem; }
+    .empty-title { font-family:'Syne',sans-serif; font-weight:800; font-size:1.2rem; margin-bottom:0.5rem; }
+    .empty-sub { font-size:0.85rem; color:var(--muted); }
+    .btn-browse { display:inline-block; margin-top:1.2rem; padding:0.65rem 1.4rem; border-radius:10px; background:var(--dark); color:#fff; text-decoration:none; font-family:'Syne',sans-serif; font-weight:700; font-size:0.85rem; }
+
+    /* Staff info strip */
+    .staff-strip {
+      display:flex; align-items:center; gap:10px;
+      margin:0 1.4rem 1.2rem;
+      background:rgba(212,82,26,0.04);
+      border:1px solid rgba(212,82,26,0.15);
+      border-radius:12px; padding:0.7rem 1rem;
+    }
+    .staff-strip-avatar {
+      width:34px; height:34px; border-radius:9px;
+      background:linear-gradient(135deg,var(--accent2),var(--accent));
+      display:grid; place-items:center;
+      font-family:"Syne",sans-serif; font-weight:800; font-size:0.85rem;
+      color:#fff; flex-shrink:0;
+    }
+    .staff-strip-info { flex:1; }
+    .staff-strip-label { font-size:0.65rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; }
+    .staff-strip-name  { font-size:0.85rem; font-weight:600; color:var(--text); margin-top:1px; }
+    .staff-strip-phone { display:flex; align-items:center; gap:5px; margin-top:2px; font-size:0.75rem; color:var(--muted); }
+    .staff-strip-phone a { color:var(--accent); text-decoration:none; font-weight:600; }
+    .staff-strip-phone a:hover { text-decoration:underline; }
+    .staff-strip-badge {
+      font-size:0.65rem; font-weight:700; color:var(--accent);
+      background:rgba(212,82,26,0.08); border:1px solid rgba(212,82,26,0.2);
+      border-radius:6px; padding:2px 8px; flex-shrink:0;
+    }
+
+    @media(max-width:600px){
+      .header-nav { display:none; }
+      .tracker { padding:1.2rem 1rem 1rem; }
+      .step-label { font-size:0.6rem; max-width:48px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="{% url 'student_dashboard' %}" class="logo">
+    <div class="logo-mark">🍽</div>
+    <div class="logo-text">Campus<span>Eats</span></div>
+  </a>
+  <nav class="header-nav">
+    <a href="{% url 'student_dashboard' %}"     class="nav-link">Menu</a>
+    <a href="{% url 'student_order_status' %}"  class="nav-link active">Order Status</a>
+    <a href="{% url 'order_history_student' %}" class="nav-link">Orders</a>
+    <a href="{% url 'student_wallet' %}"        class="nav-link">Wallet</a>
+  </nav>
+  <div class="header-right">
+    <div class="user-chip">
+      <div class="user-avatar">{{ user.name|first|upper }}</div>
+      <span class="user-name">{{ user.name }}</span>
+    </div>
+    <a href="{% url 'view_cart' %}" class="cart-btn">
+      🛒
+      {% if cart_count > 0 %}<span class="cart-count">{{ cart_count }}</span>{% endif %}
+    </a>
+    <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+  </div>
+</header>
+
+<div class="content">
+  <div class="page-title">
+    Today's <span>Orders</span>
+    <span class="refresh-badge"><span class="refresh-dot"></span> Live</span>
+  </div>
+  <div class="page-sub">{{ today|date:"l, d F Y" }} &nbsp;·&nbsp; Tracking {{ orders|length }} order{{ orders|length|pluralize }}</div>
+
+  {% if orders %}
+    {% for order in orders %}
+    {% with status=order.status %}
+    <div class="order-card" style="animation-delay:{{ forloop.counter0 }}00ms;">
+
+      <!-- Top bar -->
+      <div class="oc-top">
+        <div>
+          <div class="oc-id">#{{ order.id }}</div>
+          <div class="oc-time">Placed at {{ order.ordered_at|time:"h:i A" }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="status-label s-{{ status }}">{{ order.get_status_display }}</span>
+          <span class="oc-amount">₹{{ order.total_amount|floatformat:2 }}</span>
+        </div>
+      </div>
+
+      <!-- Tracker -->
+      {% if status != 'CANCELLED' and status != 'REJECTED' %}
+      <div class="tracker">
+        {% comment %}
+          Steps: PENDING → CONFIRMED → PREPARING → READY → COMPLETED
+          Map status to step index (0-based):
+            PENDING=0, CONFIRMED=1, PREPARING=2, READY=3, COMPLETED=4
+        {% endcomment %}
+
+        {% if status == 'PENDING'   %}{% with current_step=0 %}{% include "order_tracker_steps.html" %}{% endwith %}
+        {% elif status == 'CONFIRMED' %}{% with current_step=1 %}{% include "order_tracker_steps.html" %}{% endwith %}
+        {% elif status == 'PREPARING' %}{% with current_step=2 %}{% include "order_tracker_steps.html" %}{% endwith %}
+        {% elif status == 'READY'     %}{% with current_step=3 %}{% include "order_tracker_steps.html" %}{% endwith %}
+        {% elif status == 'COMPLETED' %}{% with current_step=4 %}{% include "order_tracker_steps.html" %}{% endwith %}
+        {% endif %}
+
+      </div>
+      {% endif %}
+
+      <!-- Staff handling this order -->
+      {% if order.accepted_by and order.status != 'PENDING' and order.status != 'REJECTED' and order.status != 'CANCELLED' %}
+      <div class="staff-strip">
+        <div class="staff-strip-avatar">{{ order.accepted_by.name|first|upper }}</div>
+        <div class="staff-strip-info">
+          <div class="staff-strip-label">Handled by</div>
+          <div class="staff-strip-name">{{ order.accepted_by.name }}</div>
+          {% if order.accepted_by.phone %}
+            <div class="staff-strip-phone">
+              📞 <a href="tel:{{ order.accepted_by.phone }}">{{ order.accepted_by.phone }}</a>
+            </div>
+          {% endif %}
+        </div>
+        <div class="staff-strip-badge">Staff</div>
+      </div>
+      {% endif %}
+
+      <!-- Items -->
+      <div class="oc-items">
+        {% for ci in order.cart_items.all %}
+          <span class="item-tag">{{ ci.item.name }} ×{{ ci.quantity }}</span>
+        {% endfor %}
+      </div>
+
+      <!-- Rejected / Cancelled reason -->
+      {% if status == 'REJECTED' or status == 'CANCELLED' %}
+        <div class="rejected-block">
+          <div class="rejected-title">
+            {% if status == 'REJECTED' %}✕ Order Rejected{% else %}✕ Order Cancelled{% endif %}
+          </div>
+          {% if order.rejected_reason %}
+            <div class="rejected-reason">{{ order.rejected_reason }}</div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+    </div>
+    {% endwith %}
+    {% endfor %}
+
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🍽</div>
+      <div class="empty-title">No orders today</div>
+      <div class="empty-sub">You haven't placed any orders today.</div>
+      <a href="{% url 'student_dashboard' %}" class="btn-browse">Browse Today's Menu</a>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  // Auto-refresh every 20 seconds to get live status updates
+  setTimeout(() => location.reload(), 20000);
+</script>
+
+</body>
+</html>

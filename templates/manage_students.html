@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Students — CampusEats Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:#0b0b0a; --sidebar:#111110; --card:#181816; --border:#272522;
+      --accent:#f5a623; --accent2:#e8431a; --text:#ede9e0; --muted:#6b6860;
+      --muted2:#3a3835; --input-bg:#0f0f0e; --hover:#1e1d1b;
+      --success:#4caf7d; --error:#ff5c5c; --sidebar-w:260px;
+    }
+    html, body { height:100%; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; }
+    .layout { display:flex; height:100vh; overflow:hidden; }
+
+    .sidebar { width:var(--sidebar-w); min-width:var(--sidebar-w); background:var(--sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; }
+    .sidebar-brand { display:flex; align-items:center; gap:10px; padding:1.4rem 1.2rem 1.2rem; border-bottom:1px solid var(--border); }
+    .brand-icon { width:36px; height:36px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:9px; display:grid; place-items:center; font-size:1rem; }
+    .brand-text { font-family:'Syne',sans-serif; font-weight:800; font-size:1.05rem; letter-spacing:-0.02em; }
+    .brand-text span { color:var(--accent); }
+    .admin-pill { margin:1rem 1rem 0.5rem; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:0.75rem 0.9rem; display:flex; align-items:center; gap:10px; }
+    .admin-avatar { width:34px; height:34px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:50%; display:grid; place-items:center; font-family:'Syne',sans-serif; font-weight:700; font-size:0.8rem; color:#0b0b0a; flex-shrink:0; }
+    .admin-name { font-weight:600; font-size:0.82rem; }
+    .admin-role { font-size:0.7rem; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; }
+    .nav-section { padding:1rem 0.8rem 0.2rem; }
+    .nav-label { font-size:0.65rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted2); padding:0 0.4rem; margin-bottom:0.35rem; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:0.55rem 0.75rem; border-radius:9px; color:var(--muted); text-decoration:none; font-size:0.855rem; transition:background 0.15s,color 0.15s; margin-bottom:2px; }
+    .nav-item:hover { background:var(--hover); color:var(--text); }
+    .nav-item.active { background:rgba(245,166,35,0.1); color:var(--accent); }
+    .nav-icon { font-size:1rem; width:20px; text-align:center; flex-shrink:0; opacity:0.6; }
+    .nav-item:hover .nav-icon, .nav-item.active .nav-icon { opacity:1; }
+    .sidebar-footer { margin-top:auto; padding:1rem; border-top:1px solid var(--border); }
+    .logout-btn { display:flex; align-items:center; gap:10px; width:100%; padding:0.55rem 0.75rem; border-radius:9px; background:transparent; border:1px solid var(--border); color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.855rem; cursor:pointer; transition:background 0.15s,color 0.15s; text-decoration:none; }
+    .logout-btn:hover { background:rgba(232,67,26,0.08); color:var(--accent2); border-color:rgba(232,67,26,0.3); }
+
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .topbar { height:58px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 1.8rem; flex-shrink:0; }
+    .topbar-title { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; }
+    .topbar-breadcrumb { font-size:0.72rem; color:var(--muted); }
+    .topbar-badge { background:rgba(245,166,35,0.12); color:var(--accent); border:1px solid rgba(245,166,35,0.25); border-radius:6px; font-size:0.7rem; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; padding:3px 8px; }
+    .content { flex:1; overflow-y:auto; padding:1.8rem; animation:fadeIn 0.35s ease both; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .section-title { font-family:'Syne',sans-serif; font-weight:800; font-size:1.35rem; letter-spacing:-0.03em; margin-bottom:1.4rem; }
+    .section-title span { color:var(--accent); }
+
+    /* Toolbar */
+    .toolbar { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:0.9rem 1.2rem; margin-bottom:1.3rem; display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap; }
+    .search-wrap { position:relative; flex:1; min-width:200px; }
+    .search-wrap input { width:100%; background:var(--input-bg); border:1px solid var(--border); border-radius:9px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.875rem; padding:0.6rem 0.9rem 0.6rem 2.1rem; outline:none; transition:border-color 0.2s; }
+    .search-wrap input:focus { border-color:var(--accent); }
+    .search-wrap input::placeholder { color:var(--muted2); }
+    .search-wrap::before { content:'⌕'; position:absolute; left:0.7rem; top:50%; transform:translateY(-50%); color:var(--muted); font-size:1rem; pointer-events:none; }
+    .btn-search { padding:0.6rem 1.2rem; border-radius:9px; border:none; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0b0b0a; font-family:'Syne',sans-serif; font-weight:700; font-size:0.82rem; cursor:pointer; }
+
+    /* Alerts */
+    .alert { border-radius:9px; padding:0.6rem 0.9rem; font-size:0.81rem; margin-bottom:1rem; }
+    .alert-success { background:rgba(76,175,125,0.1); border:1px solid rgba(76,175,125,0.3); color:var(--success); }
+    .alert-error   { background:rgba(255,92,92,0.1);  border:1px solid rgba(255,92,92,0.3);  color:var(--error); }
+
+    /* Results meta */
+    .results-meta { font-size:0.75rem; color:var(--muted); margin-bottom:0.9rem; }
+    .results-meta strong { color:var(--text); }
+
+    /* Table card */
+    .table-card { background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    thead th { font-size:0.68rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:0.7rem 1rem; text-align:left; border-bottom:1px solid var(--border); background:var(--input-bg); }
+    tbody td { padding:0.85rem 1rem; border-bottom:1px solid #1c1b19; font-size:0.875rem; vertical-align:middle; }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:hover td { background:#0f0f0e; }
+
+    .s-avatar { width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:grid; place-items:center; font-family:'Syne',sans-serif; font-weight:800; font-size:0.85rem; color:#0b0b0a; flex-shrink:0; }
+    .name-cell { display:flex; align-items:center; gap:10px; }
+    .name-text  { font-weight:500; font-size:0.875rem; }
+    .email-text { font-size:0.7rem; color:var(--muted); margin-top:2px; }
+    .adm-text   { font-family:'Syne',sans-serif; font-weight:600; font-size:0.82rem; }
+    .muted-cell { font-size:0.82rem; color:var(--muted); }
+
+    /* Block pill */
+    .block-pill { font-size:0.67rem; font-weight:700; border-radius:20px; padding:2px 9px; }
+    .block-pill.active   { background:rgba(76,175,125,0.1);  color:var(--success); border:1px solid rgba(76,175,125,0.25); }
+    .block-pill.blocked  { background:rgba(255,92,92,0.1);   color:var(--error);   border:1px solid rgba(255,92,92,0.25); }
+
+    /* Actions */
+    .row-actions { display:flex; gap:6px; }
+    .btn-icon { width:30px; height:30px; border-radius:7px; border:1px solid var(--border); background:transparent; display:grid; place-items:center; font-size:0.8rem; cursor:pointer; transition:background 0.15s,color 0.15s; color:var(--muted); }
+    .btn-icon.block:hover  { background:rgba(245,166,35,0.1); border-color:rgba(245,166,35,0.3); color:var(--accent); }
+    .btn-icon.delete:hover { background:rgba(232,67,26,0.1);  border-color:rgba(232,67,26,0.3);  color:var(--accent2); }
+
+    /* Empty */
+    .empty-state { text-align:center; color:var(--muted); padding:3rem 1rem; font-size:0.85rem; }
+    .empty-icon  { font-size:2rem; opacity:0.2; margin-bottom:0.5rem; }
+
+    /* Modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:200; align-items:center; justify-content:center; }
+    .modal-overlay.show { display:flex; }
+    .modal { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.8rem; max-width:340px; width:90%; animation:mIn 0.22s ease; }
+    @keyframes mIn { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
+    .modal-title { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; margin-bottom:0.5rem; }
+    .modal-body  { font-size:0.84rem; color:var(--muted); margin-bottom:1.4rem; line-height:1.55; }
+    .modal-body strong { color:var(--text); }
+    .modal-actions { display:flex; gap:8px; }
+    .btn-danger { flex:1; padding:0.62rem; background:rgba(232,67,26,0.12); border:1px solid rgba(232,67,26,0.3); border-radius:9px; color:var(--accent2); font-family:'Syne',sans-serif; font-weight:700; font-size:0.84rem; cursor:pointer; width:100%; transition:background 0.15s; }
+    .btn-danger:hover { background:rgba(232,67,26,0.22); }
+    .btn-ghost  { flex:1; padding:0.62rem; background:transparent; border:1px solid var(--border); border-radius:9px; color:var(--muted); font-size:0.84rem; cursor:pointer; }
+    .btn-ghost:hover { background:var(--hover); color:var(--text); }
+
+    .toast { position:fixed; bottom:1.5rem; right:1.5rem; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:0.72rem 1.1rem; font-size:0.83rem; opacity:0; transform:translateY(8px); transition:opacity 0.3s,transform 0.3s; z-index:999; pointer-events:none; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .toast.success { border-color:rgba(76,175,125,0.4); color:var(--success); }
+    .toast.error   { border-color:rgba(255,92,92,0.4);  color:var(--error); }
+
+    .mobile-toggle { display:none; background:transparent; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; }
+    @media(max-width:768px){ .sidebar{position:fixed;left:-100%;top:0;bottom:0;z-index:100;transition:left 0.3s} .sidebar.open{left:0} .mobile-toggle{display:block} }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🍽</div>
+      <div class="brand-text">Campus<span>Eats</span></div>
+    </div>
+    <div class="admin-pill">
+      <div class="admin-avatar">{{ request.session.user_name|first|upper }}</div>
+      <div>
+        <div class="admin-name">{{ request.session.user_name }}</div>
+        <div class="admin-role">{{ request.session.role }}</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Overview</div>
+        <a href="{% url 'admin_dashboard' %}" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">User Management</div>
+        <a href="{% url 'manage_staff' %}"    class="nav-item"><span class="nav-icon">👤</span> Staff</a>
+        <a href="{% url 'manage_students' %}" class="nav-item active"><span class="nav-icon">🎓</span> Students</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Menu Management</div>
+        <a href="{% url 'manage_category' %}" class="nav-item"><span class="nav-icon">◈</span> Categories</a>
+        <a href="{% url 'manage_items' %}"    class="nav-item"><span class="nav-icon">▤</span> Items</a>
+        <a href="{% url 'prepare_menu' %}"    class="nav-item"><span class="nav-icon">✦</span> Prepare Menu</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Wallet & Finance</div>
+        <a href="{% url 'recharge_wallet' %}"     class="nav-item"><span class="nav-icon">◎</span> Recharge Wallet</a>
+        <a href="{% url 'transaction_history' %}" class="nav-item"><span class="nav-icon">↕</span> Transaction History</a>
+        <a href="{% url 'revenue' %}"             class="nav-item"><span class="nav-icon">◉</span> Revenue</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Orders</div>
+        <a href="{% url 'order_history' %}" class="nav-item"><span class="nav-icon">≡</span> Order History</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="{% url 'logout' %}" class="logout-btn"><span>⇤</span> Logout</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:0.8rem;">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <div class="topbar-title">Manage Students</div>
+          <div class="topbar-breadcrumb">Admin &rsaquo; User Management &rsaquo; Students</div>
+        </div>
+      </div>
+      <span class="topbar-badge">{{ request.session.role }}</span>
+    </div>
+
+    <div class="content">
+      <div class="section-title">Manage <span>Students</span></div>
+      <div class="toast" id="toast"></div>
+
+      {% if messages %}
+        {% for m in messages %}
+          <div class="alert {% if m.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">{{ m }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Delete Modal -->
+      <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+          <div class="modal-title">Delete Student?</div>
+          <div class="modal-body">Are you sure you want to permanently delete <strong id="deleteTargetName"></strong>? All their orders and wallet data will also be removed.</div>
+          <div class="modal-actions">
+            <button class="btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+            <form method="POST" id="deleteForm" style="flex:1">
+              {% csrf_token %}
+              <button type="submit" class="btn-danger">Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <form method="GET" action="{% url 'manage_students' %}">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <input type="text" name="q" value="{{ search }}" placeholder="Search by name, admission no or email…" autofocus/>
+          </div>
+          <button type="submit" class="btn-search">Search</button>
+        </div>
+      </form>
+
+      <div class="results-meta">
+        <strong>{{ students|length }}</strong> student{{ students|length|pluralize }} found
+        {% if search %} for <strong>"{{ search }}"</strong>{% endif %}
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        {% if students %}
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Admission No.</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in students %}
+              <tr>
+                <td>
+                  <div class="name-cell">
+                    <div class="s-avatar">{{ s.name|first|upper }}</div>
+                    <div>
+                      <div class="name-text">{{ s.name }}</div>
+                      <div class="email-text">{{ s.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="adm-text">{{ s.admission_number }}</span></td>
+                <td class="muted-cell">{{ s.phone|default:"—" }}</td>
+                <td>
+                  <span class="block-pill {% if s.is_blocked %}blocked{% else %}active{% endif %}">
+                    {% if s.is_blocked %}Blocked{% else %}Active{% endif %}
+                  </span>
+                </td>
+                <td class="muted-cell">{{ s.created_at|date:"d M Y" }}</td>
+                <td>
+                  <div class="row-actions">
+                    <!-- Block / Unblock -->
+                    <form method="POST" action="{% url 'toggle_block_student' s.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn-icon block"
+                        title="{% if s.is_blocked %}Unblock{% else %}Block{% endif %}">
+                        {% if s.is_blocked %}🔓{% else %}🔒{% endif %}
+                      </button>
+                    </form>
+                    <!-- Delete -->
+                    <button class="btn-icon delete" title="Delete"
+                      onclick="confirmDelete({{ s.id }},'{{ s.name|escapejs }}')">✕</button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-icon">🎓</div>
+            {% if search %}No students match "{{ search }}".{% else %}No students registered yet.{% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function confirmDelete(id, name) {
+    document.getElementById('deleteTargetName').textContent = name;
+    document.getElementById('deleteForm').action = "{% url 'delete_student' 0 %}".replace('/0/', '/'+id+'/');
+    document.getElementById('deleteModal').classList.add('show');
+  }
+  function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('show'); }
+  document.getElementById('deleteModal').addEventListener('click', e => { if(e.target===document.getElementById('deleteModal')) closeDeleteModal(); });
+
+  {% if messages %}{% for m in messages %}showToast("{{ m }}","{{ m.tags }}");{% endfor %}{% endif %}
+  function showToast(msg,type){const t=document.getElementById('toast');t.textContent=(type==='error'?'✕  ':'✓  ')+msg;t.className='toast '+(type==='error'?'error':'success')+' show';setTimeout(()=>t.classList.remove('show'),3500);}
+</script>
+</body>
+</html>

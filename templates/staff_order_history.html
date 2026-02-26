@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order History — CampusEats Staff</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0b0b0a; --sidebar:#111110; --card:#181816; --border:#272522;
+      --accent:#f5a623; --accent2:#e8431a; --text:#ede9e0; --muted:#6b6860;
+      --muted2:#3a3835; --input-bg:#0f0f0e; --hover:#1e1d1b;
+      --success:#4caf7d; --error:#ff5c5c; --sidebar-w:260px;
+    }
+    html, body { height:100%; background:var(--bg); color:var(--text); font-family:"DM Sans",sans-serif; font-size:14px; }
+    .layout { display:flex; height:100vh; overflow:hidden; }
+    .sidebar { width:var(--sidebar-w); min-width:var(--sidebar-w); background:var(--sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; }
+    .sidebar-brand { display:flex; align-items:center; gap:10px; padding:1.4rem 1.2rem 1.2rem; border-bottom:1px solid var(--border); }
+    .brand-icon { width:36px; height:36px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:9px; display:grid; place-items:center; font-size:1rem; }
+    .brand-text { font-family:"Syne",sans-serif; font-weight:800; font-size:1.05rem; letter-spacing:-0.02em; }
+    .brand-text span { color:var(--accent); }
+    .staff-pill { margin:1rem 1rem 0.5rem; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:0.75rem 0.9rem; display:flex; align-items:center; gap:10px; }
+    .staff-avatar { width:34px; height:34px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:50%; display:grid; place-items:center; font-family:"Syne",sans-serif; font-weight:700; font-size:0.8rem; color:#0b0b0a; flex-shrink:0; }
+    .staff-name { font-weight:600; font-size:0.82rem; }
+    .staff-role { font-size:0.7rem; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; }
+    .nav-section { padding:1rem 0.8rem 0.2rem; }
+    .nav-label { font-size:0.65rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted2); padding:0 0.4rem; margin-bottom:0.35rem; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:0.55rem 0.75rem; border-radius:9px; color:var(--muted); text-decoration:none; font-size:0.855rem; transition:background 0.15s,color 0.15s; margin-bottom:2px; }
+    .nav-item:hover { background:var(--hover); color:var(--text); }
+    .nav-item.active { background:rgba(245,166,35,0.1); color:var(--accent); }
+    .nav-icon { font-size:1rem; width:20px; text-align:center; flex-shrink:0; opacity:0.6; }
+    .nav-item:hover .nav-icon, .nav-item.active .nav-icon { opacity:1; }
+    .sidebar-footer { margin-top:auto; padding:1rem; border-top:1px solid var(--border); }
+    .logout-btn { display:flex; align-items:center; gap:10px; width:100%; padding:0.55rem 0.75rem; border-radius:9px; background:transparent; border:1px solid var(--border); color:var(--muted); font-family:"DM Sans",sans-serif; font-size:0.855rem; cursor:pointer; transition:background 0.15s,color 0.15s; text-decoration:none; }
+    .logout-btn:hover { background:rgba(232,67,26,0.08); color:var(--accent2); border-color:rgba(232,67,26,0.3); }
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .topbar { height:58px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 1.8rem; flex-shrink:0; }
+    .topbar-title { font-family:"Syne",sans-serif; font-weight:700; font-size:1rem; }
+    .topbar-breadcrumb { font-size:0.72rem; color:var(--muted); }
+    .topbar-badge { background:rgba(245,166,35,0.12); color:var(--accent); border:1px solid rgba(245,166,35,0.25); border-radius:6px; font-size:0.7rem; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; padding:3px 8px; }
+    .content { flex:1; overflow-y:auto; padding:1.8rem; animation:fadeIn 0.35s ease both; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .section-title { font-family:"Syne",sans-serif; font-weight:800; font-size:1.35rem; letter-spacing:-0.03em; margin-bottom:1.5rem; }
+    .section-title span { color:var(--accent); }
+    .mobile-toggle { display:none; background:transparent; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; }
+    @media(max-width:768px){ .sidebar{position:fixed;left:-100%;top:0;bottom:0;z-index:100;transition:left 0.3s} .sidebar.open{left:0} .mobile-toggle{display:block} }
+
+    
+    .status-pill { font-size:0.68rem; font-weight:700; border-radius:20px; padding:3px 10px; text-transform:uppercase; letter-spacing:0.05em; }
+    .PENDING   { background:rgba(245,166,35,0.1);  color:#f5a623; border:1px solid rgba(245,166,35,0.25); }
+    .CONFIRMED { background:rgba(76,175,125,0.1);  color:#4caf7d; border:1px solid rgba(76,175,125,0.25); }
+    .PREPARING { background:rgba(212,82,26,0.1);   color:#d4521a; border:1px solid rgba(212,82,26,0.25); }
+    .READY     { background:rgba(76,175,125,0.15); color:#4caf7d; border:1px solid rgba(76,175,125,0.35); }
+    .COMPLETED { background:rgba(237,233,224,0.06);color:#6b6860; border:1px solid #272522; }
+    .CANCELLED { background:rgba(255,92,92,0.08);  color:#ff5c5c; border:1px solid rgba(255,92,92,0.2); }
+    .REJECTED  { background:rgba(255,92,92,0.1);   color:#ff5c5c; border:1px solid rgba(255,92,92,0.3); }
+    .table-card { background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    thead th { font-size:0.68rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:0.7rem 1rem; text-align:left; border-bottom:1px solid var(--border); background:var(--input-bg); }
+    tbody td { padding:0.85rem 1rem; border-bottom:1px solid #1c1b19; font-size:0.875rem; vertical-align:middle; }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:hover td { background:#0f0f0e; }
+    .student-name { font-weight:500; }
+    .student-adm  { font-size:0.7rem; color:var(--muted); }
+    .amount-cell  { font-family:"Syne",sans-serif; font-weight:800; color:var(--accent); }
+    .empty-state  { text-align:center; color:var(--muted); padding:3rem 1rem; }
+    .empty-icon   { font-size:2rem; opacity:0.2; margin-bottom:0.5rem; }
+    .coming-soon  { display:inline-flex; align-items:center; gap:6px; background:rgba(245,166,35,0.08); border:1px solid rgba(245,166,35,0.2); border-radius:8px; padding:3px 10px; font-size:0.7rem; color:var(--accent); font-weight:600; margin-left:8px; }
+
+  </style>
+</head>
+<body>
+<div class="layout">
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🍽</div>
+      <div class="brand-text">Campus<span>Eats</span></div>
+    </div>
+    <div class="staff-pill">
+      <div class="staff-avatar">{{ request.session.user_name|first|upper }}</div>
+      <div>
+        <div class="staff-name">{{ request.session.user_name }}</div>
+        <div class="staff-role">Staff</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Overview</div>
+        <a href="{% url 'staff_dashboard' %}" class="nav-item "><span class="nav-icon">⊞</span> Dashboard</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Menu</div>
+        <a href="{% url 'staff_prepare_menu' %}" class="nav-item "><span class="nav-icon">✦</span> Prepare Menu</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Orders</div>
+        <a href="{% url 'staff_order_management' %}" class="nav-item "><span class="nav-icon">◈</span> Order Management</a>
+        <a href="{% url 'staff_order_history' %}"    class="nav-item active"><span class="nav-icon">≡</span> Order History</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="{% url 'logout' %}" class="logout-btn"><span>⇤</span> Logout</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:0.8rem;">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <div class="topbar-title">Order History</div>
+          <div class="topbar-breadcrumb">Staff &rsaquo; Orders &rsaquo; History</div>
+        </div>
+      </div>
+      <span class="topbar-badge">STAFF</span>
+    </div>
+    <div class="content">
+      <div class="section-title">Order <span>History</span></div>
+      <div class="table-card">
+        {% if orders %}
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th><th>Student</th><th>Date &amp; Time</th><th>Status</th><th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+              <tr>
+                <td style="font-family:Syne,sans-serif;font-weight:700">#{{ order.id }}</td>
+                <td><div class="student-name">{{ order.user.name }}</div><div class="student-adm">{{ order.user.admission_number }}</div></td>
+                <td style="color:var(--muted);font-size:0.82rem">{{ order.ordered_at|date:"d M Y" }}<br><span style="font-size:0.7rem">{{ order.ordered_at|time:"h:i A" }}</span></td>
+                <td><span class="status-pill {{ order.status }}">{{ order.get_status_display }}</span></td>
+                <td class="amount-cell">₹{{ order.total_amount|floatformat:2 }}</td>
+                
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <div class="empty-state"><div class="empty-icon">≡</div>No orders yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!-- Order detail partial — loaded into modal via fetch -->
+<div class="modal-order-header">
+  <div class="modal-order-meta">
+    <div class="modal-order-id">Order #{{ order.id }}</div>
+    <div class="modal-order-info">{{ order.user.name }} &nbsp;·&nbsp; {{ order.user.admission_number }}</div>
+    <div class="modal-order-info">{{ order.ordered_at|date:"d M Y, h:i A" }}</div>
+  </div>
+  <span class="status-pill {{ order.status }}">{{ order.get_status_display }}</span>
+</div>
+
+<table class="detail-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Category</th>
+      <th>Unit Price</th>
+      <th>Qty</th>
+      <th>Subtotal</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ci in cart_items %}
+    <tr>
+      <td class="item-name-cell">
+        {% if ci.item.image %}
+          <img src="{{ ci.item.image.url }}" class="mini-thumb" alt="{{ ci.item.name }}"/>
+        {% else %}
+          <span class="mini-thumb-placeholder">🍽</span>
+        {% endif %}
+        {{ ci.item.name }}
+      </td>
+      <td><span class="cat-pill">{{ ci.item.category.name }}</span></td>
+      <td class="muted-cell">₹{{ ci.price|floatformat:2 }}</td>
+      <td class="qty-cell">{{ ci.quantity }}</td>
+      <td class="subtotal-cell">₹{{ ci.subtotal|floatformat:2 }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="total-row">
+      <td colspan="4">Total</td>
+      <td class="grand-total">₹{{ order.total_amount|floatformat:2 }}</td>
+    </tr>
+  </tfoot>
+</table>

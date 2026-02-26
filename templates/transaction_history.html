@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Transaction History — CampusEats Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0b0b0a;
+      --sidebar:   #111110;
+      --card:      #181816;
+      --border:    #272522;
+      --accent:    #f5a623;
+      --accent2:   #e8431a;
+      --text:      #ede9e0;
+      --muted:     #6b6860;
+      --muted2:    #3a3835;
+      --input-bg:  #0f0f0e;
+      --hover:     #1e1d1b;
+      --success:   #4caf7d;
+      --error:     #ff5c5c;
+      --sidebar-w: 260px;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 1.4rem 1.2rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .brand-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 9px; display: grid; place-items: center; font-size: 1rem; }
+    .brand-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; }
+    .brand-text span { color: var(--accent); }
+    .admin-pill { margin: 1rem 1rem 0.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 0.9rem; display: flex; align-items: center; gap: 10px; }
+    .admin-avatar { width: 34px; height: 34px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 50%; display: grid; place-items: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem; color: #0b0b0a; flex-shrink: 0; }
+    .admin-name { font-weight: 600; font-size: 0.82rem; }
+    .admin-role { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+    .nav-section { padding: 1rem 0.8rem 0.2rem; }
+    .nav-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted2); padding: 0 0.4rem; margin-bottom: 0.35rem; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 0.55rem 0.75rem; border-radius: 9px; color: var(--muted); text-decoration: none; font-size: 0.855rem; transition: background 0.15s, color 0.15s; margin-bottom: 2px; }
+    .nav-item:hover { background: var(--hover); color: var(--text); }
+    .nav-item.active { background: rgba(245,166,35,0.1); color: var(--accent); }
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; opacity: 0.6; }
+    .nav-item:hover .nav-icon, .nav-item.active .nav-icon { opacity: 1; }
+    .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid var(--border); }
+    .logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0.55rem 0.75rem; border-radius: 9px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.855rem; cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; }
+    .logout-btn:hover { background: rgba(232,67,26,0.08); color: var(--accent2); border-color: rgba(232,67,26,0.3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 58px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.8rem; flex-shrink: 0; }
+    .topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+    .topbar-breadcrumb { font-size: 0.72rem; color: var(--muted); }
+    .topbar-badge { background: rgba(245,166,35,0.12); color: var(--accent); border: 1px solid rgba(245,166,35,0.25); border-radius: 6px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 3px 8px; }
+    .content { flex: 1; overflow-y: auto; padding: 1.8rem; animation: fadeIn 0.35s ease both; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .section-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.03em; margin-bottom: 1.5rem; }
+    .section-title span { color: var(--accent); }
+
+    /* ── Two panel layout ── */
+    .panels { display: grid; grid-template-columns: 320px 1fr; gap: 1.4rem; align-items: start; }
+    @media (max-width: 900px) { .panels { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.4rem; }
+    .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.92rem; margin-bottom: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .card-icon { width: 26px; height: 26px; background: rgba(245,166,35,0.12); border-radius: 7px; display: grid; place-items: center; font-size: 0.8rem; }
+
+    /* ── Search ── */
+    .search-wrap { position: relative; margin-bottom: 0.8rem; }
+    .search-wrap input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; padding: 0.65rem 0.9rem 0.65rem 2.2rem; outline: none; transition: border-color 0.2s; }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-wrap input::placeholder { color: var(--muted2); }
+    .search-wrap::before { content: '⌕'; position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1rem; pointer-events: none; }
+    .btn-search { width: 100%; padding: 0.65rem; border-radius: 10px; border: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #0b0b0a; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: opacity 0.2s; }
+    .btn-search:hover { opacity: 0.88; }
+
+    /* ── Student list ── */
+    .student-list { display: flex; flex-direction: column; gap: 6px; margin-top: 1rem; max-height: 420px; overflow-y: auto; }
+    .student-list::-webkit-scrollbar { width: 3px; }
+    .student-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .student-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0.65rem 0.8rem; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--input-bg);
+      text-decoration: none; color: var(--text);
+      transition: border-color 0.15s, background 0.15s;
+      cursor: pointer;
+    }
+    .student-row:hover { border-color: rgba(245,166,35,0.3); background: var(--hover); }
+    .student-row.selected { border-color: var(--accent); background: rgba(245,166,35,0.06); }
+    .s-avatar { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: grid; place-items: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.78rem; color: #0b0b0a; flex-shrink: 0; }
+    .s-name { font-weight: 500; font-size: 0.855rem; }
+    .s-adm  { font-size: 0.7rem; color: var(--muted); }
+    .s-arrow { margin-left: auto; color: var(--muted2); font-size: 0.8rem; }
+    .student-row.selected .s-arrow { color: var(--accent); }
+
+    /* ── Right panel ── */
+    .right-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem; }
+
+    .student-banner {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1.2rem;
+    }
+    .banner-avatar { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: grid; place-items: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem; color: #0b0b0a; flex-shrink: 0; }
+    .banner-info { flex: 1; }
+    .banner-name { font-weight: 600; font-size: 0.9rem; }
+    .banner-meta { font-size: 0.72rem; color: var(--muted); }
+    .balance-badge { background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.2); border-radius: 20px; padding: 3px 12px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; color: var(--success); flex-shrink: 0; }
+
+    /* Date filter */
+    .filter-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .filter-label { font-size: 0.75rem; color: var(--muted); }
+    .date-input { background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.83rem; padding: 0.45rem 0.75rem; outline: none; transition: border-color 0.2s; }
+    .date-input:focus { border-color: var(--accent); }
+    .btn-filter { padding: 0.45rem 0.9rem; border-radius: 8px; border: none; background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.2); color: var(--accent); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.78rem; cursor: pointer; transition: background 0.15s; }
+    .btn-filter:hover { background: rgba(245,166,35,0.22); }
+    .btn-clear { padding: 0.45rem 0.9rem; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 0.78rem; cursor: pointer; transition: background 0.15s; font-family: 'DM Sans', sans-serif; text-decoration: none; display: inline-block; }
+    .btn-clear:hover { background: var(--hover); color: var(--text); }
+
+    /* Transactions table */
+    .txn-count { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.8rem; }
+    .txn-list { display: flex; flex-direction: column; gap: 7px; }
+
+    .txn-row {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.75rem 1rem;
+      animation: rowIn 0.25s ease both;
+    }
+    @keyframes rowIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+    .txn-icon { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; font-size: 0.9rem; flex-shrink: 0; }
+    .txn-icon.credit { background: rgba(76,175,125,0.12); }
+    .txn-icon.debit  { background: rgba(232,67,26,0.1); }
+
+    .txn-info { flex: 1; min-width: 0; }
+    .txn-type { font-weight: 600; font-size: 0.855rem; }
+    .txn-type.credit { color: var(--success); }
+    .txn-type.debit  { color: var(--accent2); }
+    .txn-meta { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+    .txn-amount { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.95rem; flex-shrink: 0; }
+    .txn-amount.credit { color: var(--success); }
+    .txn-amount.debit  { color: var(--accent2); }
+
+    .txn-balance { font-size: 0.75rem; color: var(--muted); text-align: right; flex-shrink: 0; min-width: 70px; }
+    .txn-balance strong { display: block; color: var(--text); font-size: 0.82rem; }
+
+    /* States */
+    .empty-state { text-align: center; color: var(--muted); padding: 3rem 1rem; }
+    .empty-icon  { font-size: 2rem; opacity: 0.2; margin-bottom: 0.5rem; }
+    .prompt-state { text-align: center; color: var(--muted); padding: 4rem 1rem; }
+    .prompt-icon  { font-size: 2.5rem; opacity: 0.15; margin-bottom: 0.7rem; }
+    .prompt-text  { font-size: 0.85rem; line-height: 1.6; }
+
+    .mobile-toggle { display: none; background: transparent; border: none; color: var(--text); font-size: 1.3rem; cursor: pointer; }
+    @media (max-width: 768px) { .sidebar { position: fixed; left: -100%; top:0; bottom:0; z-index:100; transition: left 0.3s; } .sidebar.open { left:0; } .mobile-toggle { display: block; } }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🍽</div>
+      <div class="brand-text">Campus<span>Eats</span></div>
+    </div>
+    <div class="admin-pill">
+      <div class="admin-avatar">{{ request.session.user_name|first|upper }}</div>
+      <div>
+        <div class="admin-name">{{ request.session.user_name }}</div>
+        <div class="admin-role">{{ request.session.role }}</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Overview</div>
+        <a href="{% url 'admin_dashboard' %}" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">User Management</div>
+        <a href="{% url 'manage_staff' %}"    class="nav-item "><span class="nav-icon">👤</span> Staff</a>
+        <a href="{% url 'manage_students' %}" class="nav-item"><span class="nav-icon">🎓</span> Students</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Menu Management</div>
+        <a href="{% url 'manage_category' %}" class="nav-item"><span class="nav-icon">◈</span> Categories</a>
+        <a href="{% url 'manage_items' %}"    class="nav-item"><span class="nav-icon">▤</span> Items</a>
+        <a href="{% url 'prepare_menu' %}"    class="nav-item"><span class="nav-icon">✦</span> Prepare Menu</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Wallet & Finance</div>
+        <a href="{% url 'recharge_wallet' %}"     class="nav-item"><span class="nav-icon">◎</span> Recharge Wallet</a>
+        <a href="{% url 'transaction_history' %}" class="nav-item active"><span class="nav-icon">↕</span> Transaction History</a>
+        <a href="{% url 'revenue' %}"             class="nav-item"><span class="nav-icon">◉</span> Revenue</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Orders</div>
+        <a href="{% url 'order_history' %}" class="nav-item"><span class="nav-icon">≡</span> Order History</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="{% url 'logout' %}" class="logout-btn"><span>⇤</span> Logout</a>
+    </div>
+  </aside>
+  <!-- ── Main ── -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:0.8rem;">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <div class="topbar-title">Transaction History</div>
+          <div class="topbar-breadcrumb">Admin &rsaquo; Wallet &amp; Finance &rsaquo; Transactions</div>
+        </div>
+      </div>
+      <span class="topbar-badge">{{ request.session.role }}</span>
+    </div>
+
+    <div class="content">
+      <div class="section-title">Transaction <span>History</span></div>
+
+      <div class="panels">
+
+        <!-- ── Left: Search + Student list ── -->
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">⌕</div> Find Student
+          </div>
+
+          <form method="GET" action="{% url 'transaction_history' %}">
+            <div class="search-wrap">
+              <input type="text" name="q" value="{{ search_query }}"
+                     placeholder="Name or admission no…" autofocus/>
+            </div>
+            {% if student_id %}
+              <input type="hidden" name="student_id" value="{{ student_id }}"/>
+            {% endif %}
+            <button type="submit" class="btn-search">Search</button>
+          </form>
+
+          {% if students is not None %}
+            <div class="student-list">
+              {% for s in students %}
+                <a href="?q={{ search_query }}&student_id={{ s.id }}"
+                   class="student-row {% if student and student.id == s.id %}selected{% endif %}">
+                  <div class="s-avatar">{{ s.name|first|upper }}</div>
+                  <div>
+                    <div class="s-name">{{ s.name }}</div>
+                    <div class="s-adm">{{ s.admission_number }}</div>
+                  </div>
+                  <span class="s-arrow">›</span>
+                </a>
+              {% empty %}
+                <div class="empty-state">
+                  <div class="empty-icon">◎</div>
+                  No students found.
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- ── Right: Transactions ── -->
+        <div class="card">
+
+          {% if student %}
+            <!-- Student banner -->
+            <div class="student-banner">
+              <div class="banner-avatar">{{ student.name|first|upper }}</div>
+              <div class="banner-info">
+                <div class="banner-name">{{ student.name }}</div>
+                <div class="banner-meta">{{ student.admission_number }} · {{ student.email }}</div>
+              </div>
+              {% if transactions %}
+                <div class="balance-badge">₹{{ transactions.0.balance|floatformat:2 }}</div>
+              {% else %}
+                <div class="balance-badge">₹0.00</div>
+              {% endif %}
+            </div>
+
+            <!-- Date filter -->
+            <form method="GET" action="{% url 'transaction_history' %}" class="filter-row" style="margin-bottom:1.2rem;">
+              <input type="hidden" name="q"          value="{{ search_query }}"/>
+              <input type="hidden" name="student_id" value="{{ student.id }}"/>
+              <span class="filter-label">Filter by date:</span>
+              <input type="date" name="date" class="date-input" value="{{ selected_date }}"/>
+              <button type="submit" class="btn-filter">Apply</button>
+              {% if selected_date %}
+                <a href="?q={{ search_query }}&student_id={{ student.id }}" class="btn-clear">Clear</a>
+              {% endif %}
+            </form>
+
+            <!-- Transaction list -->
+            {% if transactions %}
+              <div class="txn-count">
+  {{ transactions|length }} transaction{{ transactions|length|pluralize }}
+  {% if selected_date %} on {{ selected_date }}{% endif %}
+</div>
+
+<div class="txn-list">
+  {% for txn in transactions %}
+    <div class="txn-row">
+
+      <!-- ICON -->
+      <div class="txn-icon {% if txn.transaction_type == 'CREDIT' or txn.transaction_type == 'RETURN' %}credit{% else %}debit{% endif %}">
+        {% if txn.transaction_type == 'CREDIT' or txn.transaction_type == 'RETURN' %}
+          ↓
+        {% else %}
+          ↑
+        {% endif %}
+      </div>
+
+      <!-- INFO -->
+      <div class="txn-info">
+        <div class="txn-type {% if txn.transaction_type == 'CREDIT' or txn.transaction_type == 'RETURN' %}credit{% else %}debit{% endif %}">
+          {{ txn.transaction_type|capfirst }}
+          {% if txn.order %} — Order #{{ txn.order.id }}{% endif %}
+        </div>
+        <div class="txn-meta">
+          {{ txn.date|date:"d M Y" }} &nbsp;·&nbsp; {{ txn.time|time:"h:i A" }}
+        </div>
+      </div>
+
+      <!-- AMOUNT -->
+      <div class="txn-amount {% if txn.transaction_type == 'CREDIT' or txn.transaction_type == 'RETURN' %}credit{% else %}debit{% endif %}">
+        {% if txn.transaction_type == 'CREDIT' or txn.transaction_type == 'RETURN' %}
+          +₹{{ txn.amount|floatformat:2 }}
+        {% else %}
+          −₹{{ txn.amount|floatformat:2 }}
+        {% endif %}
+      </div>
+
+      <!-- BALANCE -->
+      <div class="txn-balance">
+        Balance
+        <strong>₹{{ txn.balance|floatformat:2 }}</strong>
+      </div>
+
+    </div>
+  {% endfor %}
+</div>
+
+
+            {% else %}
+              <div class="empty-state">
+                <div class="empty-icon">↕</div>
+                {% if selected_date %}
+                  No transactions on {{ selected_date }}.
+                {% else %}
+                  No transactions found for {{ student.name }}.
+                {% endif %}
+              </div>
+            {% endif %}
+
+          {% else %}
+            <div class="prompt-state">
+              <div class="prompt-icon">↕</div>
+              <div class="prompt-text">
+                Search for a student on the left<br/>and click their name to view transactions.
+              </div>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Stagger transaction rows
+  document.querySelectorAll('.txn-row').forEach((row, i) => {
+    row.style.animationDelay = (i * 0.04) + 's';
+  });
+</script>
+</body>
+</html>

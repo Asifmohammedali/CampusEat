@@ -1,0 +1,81 @@
+{% comment %}
+  Included by student_order_status.html
+  Expects: order (Order obj), current_step (int 0-4)
+{% endcomment %}
+
+{% with ordered_time=order.ordered_at %}
+<div style="position:relative;">
+
+  <!-- Base grey line -->
+  <div class="track-line">
+
+    <!-- Animated progress fill -->
+    <div class="track-progress" id="prog-{{ order.id }}"></div>
+
+    <!-- Step 0: Ordered -->
+    <div class="track-step">
+      <div class="step-dot {% if current_step > 0 %}done{% elif current_step == 0 %}active{% endif %}">
+        {% if current_step > 0 %}✓{% else %}📋{% endif %}
+      </div>
+      <div class="step-label {% if current_step >= 0 %}done{% endif %}">Ordered</div>
+      <div class="step-time">{{ order.ordered_at|time:"h:i A" }}</div>
+    </div>
+
+    <!-- Step 1: Confirmed -->
+    <div class="track-step">
+      <div class="step-dot {% if current_step > 1 %}done{% elif current_step == 1 %}active{% endif %}">
+        {% if current_step > 1 %}✓{% elif current_step == 1 %}✦{% else %}○{% endif %}
+      </div>
+      <div class="step-label {% if current_step > 1 %}done{% elif current_step == 1 %}active{% endif %}">Confirmed</div>
+      <div class="step-time">&nbsp;</div>
+    </div>
+
+    <!-- Step 2: Preparing -->
+    <div class="track-step">
+      <div class="step-dot {% if current_step > 2 %}done{% elif current_step == 2 %}active{% endif %}">
+        {% if current_step > 2 %}✓{% elif current_step == 2 %}🍳{% else %}○{% endif %}
+      </div>
+      <div class="step-label {% if current_step > 2 %}done{% elif current_step == 2 %}active{% endif %}">Preparing</div>
+      <div class="step-time">&nbsp;</div>
+    </div>
+
+    <!-- Step 3: Ready -->
+    <div class="track-step">
+      <div class="step-dot {% if current_step > 3 %}done{% elif current_step == 3 %}active{% endif %}">
+        {% if current_step > 3 %}✓{% elif current_step == 3 %}✦{% else %}○{% endif %}
+      </div>
+      <div class="step-label {% if current_step > 3 %}done{% elif current_step == 3 %}active{% endif %}">Ready!</div>
+      <div class="step-time">&nbsp;</div>
+    </div>
+
+    <!-- Step 4: Delivered -->
+    <div class="track-step">
+      <div class="step-dot {% if current_step == 4 %}done{% endif %}">
+        {% if current_step == 4 %}✓{% else %}○{% endif %}
+      </div>
+      <div class="step-label {% if current_step == 4 %}done{% endif %}">Delivered</div>
+      <div class="step-time">
+        {% if order.delivered_at %}{{ order.delivered_at|time:"h:i A" }}{% else %}&nbsp;{% endif %}
+      </div>
+    </div>
+
+  </div><!-- /.track-line -->
+</div>
+
+<script>
+(function() {
+  const step     = {{ current_step }};
+  const total    = 4; // 0 to 4, so 4 gaps
+  const pct      = step / total;
+  const el       = document.getElementById('prog-{{ order.id }}');
+  if (el) {
+    // Wait a tick so the animation plays on load
+    requestAnimationFrame(() => {
+      const parent = el.closest('.track-line');
+      const w = parent.offsetWidth - 32; // subtract left + right 16px padding
+      el.style.width = (pct * w) + 'px';
+    });
+  }
+})();
+</script>
+{% endwith %}
